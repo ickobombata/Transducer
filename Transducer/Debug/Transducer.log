@@ -1,2 +1,10 @@
 ﻿  main.cpp
+c:\users\ickobombata\source\repos\transducer\transducer\automata.h(123): warning C4018: '<': signed/unsigned mismatch
+c:\users\ickobombata\source\repos\transducer\transducer\automata.h(157): warning C4018: '<': signed/unsigned mismatch
+c:\users\ickobombata\source\repos\transducer\transducer\automata.h(161): warning C4018: '<': signed/unsigned mismatch
+c:\users\ickobombata\source\repos\transducer\transducer\automata.h(169): warning C4018: '<': signed/unsigned mismatch
+c:\users\ickobombata\source\repos\transducer\transducer\automata.h(197): warning C4018: '<': signed/unsigned mismatch
+c:\users\ickobombata\source\repos\transducer\transducer\automata.h(216): warning C4018: '<': signed/unsigned mismatch
+c:\users\ickobombata\source\repos\transducer\transducer\automata.h(364): warning C4018: '<': signed/unsigned mismatch
+c:\users\ickobombata\source\repos\transducer\transducer\automata.h(369): warning C4018: '<': signed/unsigned mismatch
   Transducer.vcxproj -> C:\Users\ickobombata\source\repos\Transducer\Debug\Transducer.exe
