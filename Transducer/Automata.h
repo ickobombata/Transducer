@@ -11,10 +11,11 @@
 #define N 10000
 #define Epsilon ""
 
+
+
 typedef std::pair<std::string, std::string> Transition;
-typedef std::vector<int> States;
-typedef std::pair< Transition , int > Output;
-typedef std::unordered_map< int, std::vector< Output > > Transitions;
+typedef std::unordered_set<int> States;
+typedef std::pair< Transition, int> Output; 
 
 struct output_hash {
 	std::size_t operator()(const Output& output) const {
@@ -24,6 +25,9 @@ struct output_hash {
 		return std::hash<std::string>()(s);
 	}
 };
+
+typedef std::unordered_set< Output, output_hash> Outputs;
+typedef std::unordered_map< int, Outputs> Transitions;
 
 class Automata {
 public:
@@ -48,8 +52,8 @@ public:
 
 	Automata(int init, int fin, Transitions trans) {
 		this->name = "";
-		this->init.push_back(init);
-		this->fin.push_back(fin);
+		this->init.insert(init);
+		this->fin.insert(fin);
 		this->trans = trans;
 	}
 
@@ -59,15 +63,15 @@ public:
 		unionTransitions(this->trans, other->trans);
 
 		int newState = this->trans.size();
-		std::vector< Output > exits;
+		Outputs exits;
 		for (const int& state : remapedInits) {
-			exits.push_back(Output(Transition(Epsilon, Epsilon), state));
+			exits.insert(Output(Transition(Epsilon, Epsilon), state));
 		}
 		this->trans[newState] = exits;
 
 		for (const int& state : this->fin) {
-			exits.push_back(Output(Transition(Epsilon, Epsilon), state));
-			trans[state].push_back(Output(Transition(Epsilon, Epsilon), newState));
+			exits.insert(Output(Transition(Epsilon, Epsilon), state));
+			trans[state].insert(Output(Transition(Epsilon, Epsilon), newState));
 		}
 		this->fin = remapedFins;
 
@@ -80,16 +84,16 @@ public:
 		unionTransitions(this->trans, other->trans);
 
 		int newState = this->trans.size();
-		std::vector< Output > exits;
+		Outputs exits;
 		for (const int& state: init) {
-			exits.push_back(Output(Transition(Epsilon, Epsilon), state));	
+			exits.insert(Output(Transition(Epsilon, Epsilon), state));	
 		}
 		for (const int& state: remapedInits) {
-			exits.push_back(Output(Transition(Epsilon, Epsilon), state));	
+			exits.insert(Output(Transition(Epsilon, Epsilon), state));	
 		}
 		this->trans[newState] = exits;
 		States newInitStates;
-		newInitStates.push_back(newState);
+		newInitStates.insert(newState);
 		this->init = newInitStates;
 
 		return this;
@@ -97,20 +101,20 @@ public:
 
 	Automata* starFSA() {
 		int newState = this->trans.size();
-		std::vector< Output > exits;
+		Outputs exits;
 		for (const int& state : this->init) {
-			exits.push_back(Output(Transition(Epsilon, Epsilon), state));
+			exits.insert(Output(Transition(Epsilon, Epsilon), state));
 		}
 		this->trans[newState] = exits;
 
 		for (const int& state : this->fin) {
-			exits.push_back(Output(Transition(Epsilon, Epsilon), state));
-			this->trans[state].push_back(Output(Transition(Epsilon, Epsilon), newState));
+			exits.insert(Output(Transition(Epsilon, Epsilon), state));
+			this->trans[state].insert(Output(Transition(Epsilon, Epsilon), newState));
 		}
-		std::vector<int> newInit;
-		newInit.push_back(newState);
-		std::vector<int> newFin;
-		newFin.push_back(newState);
+		States newInit;
+		newInit.insert(newState);
+		States newFin;
+		newFin.insert(newState);
 		this->init = newInit;
 		this->fin = newFin;
 		return this;
@@ -170,7 +174,7 @@ public:
 		// Fill vertices in stack according to their finishing times
 		for (int i = 0; i < this->trans.size(); i++)
 			if (visited[i] == false)
-				topoSorted = sortStatesTopologically(this, false);
+				topoSorted = sortStatesTopologically(this, epsilonTransitions);
 
 		// Create a reversed graph
 		Automata* transposed = getTranspose();
@@ -229,12 +233,11 @@ public:
 
 		std::unordered_set<int> toRemove;
 		Transitions transitions;
-		int addedCounter = 0;
 		for (Transitions::iterator it = this->trans.begin(); it != this->trans.end(); ++it) {
 			if (toRemove.find(it->first) != toRemove.end()) {
 				continue;
 			}
-			transitions[addedCounter] = std::vector<Output>();
+			transitions[metaState[it->first]] = Outputs();
 
 			std::unordered_set<int>* component = scc[it->first];
 			for (std::unordered_set<int>::iterator usIt = component->begin(); usIt != component->end(); ++usIt) {
@@ -244,21 +247,20 @@ public:
 						scc[it->first]->find(output.second) != scc[it->first]->end()) {
 						continue;
 					}
-					transitions[addedCounter].push_back(Output(output.first, metaState[output.second]));
+					transitions[metaState[it->first]].insert(Output(output.first, metaState[output.second]));
 				}
 			}
-			++addedCounter;
 
 		}
 		this->trans = transitions;
 
-		std::vector<int> remapedInits;
-		std::vector<int> remapedFins;
+		States remapedInits;
+		States remapedFins;
 		for (const int& i : this->init) {
-			remapedInits.push_back(metaState[i]);
+			remapedInits.insert(metaState[i]);
 		}
 		for (const int& f : this->fin) {
-			remapedFins.push_back(metaState[f]);
+			remapedFins.insert(metaState[f]);
 		}
 		this->init = remapedInits;
 		this->fin = remapedFins;
@@ -296,7 +298,7 @@ private:
 	States unionStates(States& s1, States& s2) {
 		States remaped = remapStates(s2);
 		for (const int& state: remaped) {
-			s1.push_back(state);
+			s1.insert(state);
 		}
 		return s1;
 	}
@@ -312,7 +314,7 @@ private:
 	States remapStates(States& states) {
 		States remapedState;
 		for (const int& state: states) {
-			remapedState.push_back(remap(state));
+			remapedState.insert(remap(state));
 		}
 		return remapedState;
 	}
@@ -320,9 +322,9 @@ private:
 	Transitions remapTransitions(Transitions& other) {
 		Transitions remapedTransitions;
 		for (Transitions::iterator it = other.begin(); it != other.end(); ++it) {
-			std::vector< Output > neighbours;
+			Outputs neighbours;
 			for(const Output& as: it->second) {
-				neighbours.push_back(Output(as.first, remap(as.second)));
+				neighbours.insert(Output(as.first, remap(as.second)));
 			}
 			remapedTransitions[remap(it->first)] = neighbours; 
 		}
@@ -333,10 +335,10 @@ private:
 		Transitions transitions;
 
 		for (Transitions::iterator it = this->trans.begin(); it != this->trans.end(); ++it) {
-			transitions[it->first] = std::vector<Output>();
+			transitions[it->first] = Outputs();
 			for (const Output& output : it->second) {
 				if (output.first.first != Epsilon) {
-					transitions[it->first].push_back(output);
+					transitions[it->first].insert(output);
 				}
 			}
 		}
@@ -389,12 +391,12 @@ private:
 	Automata* getTranspose() {
 		Transitions transposed;
 		for (Transitions::iterator it = this->trans.begin(); it != this->trans.end(); ++it) {
-			transposed[it->first] = std::vector<Output>();
+			transposed[it->first] = Outputs();
 		}
 		for (Transitions::iterator it = this->trans.begin(); it != this->trans.end(); ++it) {
 			// Recur for all the vertices adjacent to this vertex
 			for (const Output& output : it->second) {
-				transposed[output.second].push_back(Output(output.first, it->first));
+				transposed[output.second].insert(Output(output.first, it->first));
 			}
 		}
 		Automata* automata = new Automata(this->fin, this->init, transposed);
