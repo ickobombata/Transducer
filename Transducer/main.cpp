@@ -147,7 +147,16 @@ void Test_RemoveEpsilonCycles() {
 	printAutomata(A);
 }
 
+struct pair_hash {
+	std::size_t operator()(const std::pair<int, int>& pair) const{
+		std::string s = std::to_string(pair.first);
+		//s.append(std::to_string(pair.second));
+		return std::hash<std::string>()(s);
+	}
+};
+
 int main(int argc, char argv[]) {
+	std::unordered_set < std::pair<int, int>, pair_hash > aa;
 	try {
 		//Test_AutomataOperations();
 		//Test_AutomataFactory();

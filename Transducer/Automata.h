@@ -5,6 +5,7 @@
 #include <map>
 #include <stack>
 #include <unordered_set>
+#include <unordered_map>
 #include <algorithm>
 
 #define N 10000
@@ -13,7 +14,16 @@
 typedef std::pair<std::string, std::string> Transition;
 typedef std::vector<int> States;
 typedef std::pair< Transition , int > Output;
-typedef std::map< int, std::vector< Output > > Transitions;
+typedef std::unordered_map< int, std::vector< Output > > Transitions;
+
+struct output_hash {
+	std::size_t operator()(const Output& output) const {
+		std::string s = output.first.first;
+		s.append(output.first.second);
+		s.append(std::to_string(output.second));
+		return std::hash<std::string>()(s);
+	}
+};
 
 class Automata {
 public:
@@ -191,9 +201,9 @@ public:
 	Automata* removeEpsilonCycles() {
 		std::vector< std::unordered_set<int> > stronglyConnectedComponents = findStronglyConnectedComponents(true);
 
-		std::map<int, std::unordered_set<int>* > scc;
+		std::unordered_map<int, std::unordered_set<int>* > scc;
 		std::unordered_set<int>* aa;
-		std::map<int, int> metaState;
+		std::unordered_map<int, int> metaState;
 		std::vector<int> minimalStates(this->trans.size()); for (int i = 0; i < minimalStates.size(); ++i) minimalStates[i] = -1;
 		int minimalStatesCounter = 0;
 		for (const std::unordered_set<int>& component : stronglyConnectedComponents) {
@@ -229,14 +239,15 @@ public:
 			std::unordered_set<int>* component = scc[it->first];
 			for (std::unordered_set<int>::iterator usIt = component->begin(); usIt != component->end(); ++usIt) {
 				for (const Output& output : this->trans[*usIt]) {
+					toRemove.insert(*usIt);
 					if (output.first.first == Epsilon && output.first.second == Epsilon && 
 						scc[it->first]->find(output.second) != scc[it->first]->end()) {
 						continue;
 					}
-					transitions[addedCounter++].push_back(Output(output.first, metaState[output.second]));
-					toRemove.insert(*usIt);
+					transitions[addedCounter].push_back(Output(output.first, metaState[output.second]));
 				}
 			}
+			++addedCounter;
 
 		}
 		this->trans = transitions;
