@@ -160,7 +160,33 @@ public:
 	}
 
 	Automata* removeEpsilonToEpsilonTransitions() {
-		return nullptr;
+		std::stack<int> topoSorted = sortStatesTopologically(this, true);
+		std::stack<int> reversed;
+		while (!topoSorted.empty()) {
+			reversed.push(topoSorted.top());
+			topoSorted.pop();
+		}
+		while (!reversed.empty()) {
+			const int state = reversed.top();
+			reversed.pop();
+
+			Outputs additional;
+			Outputs epsilons;
+			for (const Output& output : this->trans[state]) {
+				if (output.first.first == Epsilon && output.first.second == Epsilon) {
+					additional.insert(trans[output.second].begin(), trans[output.second].end());
+					epsilons.insert(output);
+				}
+			}
+			if (additional.size() > 0) {
+				trans[state].insert(additional.begin(), additional.end());
+				for (Outputs::iterator it = epsilons.begin(); it != epsilons.end(); ++it) {
+					trans[state].erase(*it);
+				}
+			}
+		}
+
+		return this;
 	}
 
 	std::vector< std::unordered_set<int> > findStronglyConnectedComponents(bool epsilonTransitions) {
@@ -182,8 +208,6 @@ public:
 		// Mark all the vertices as not visited (For second DFS)
 		for (int i = 0; i < this->trans.size(); i++)
 			visited[i] = false;
-
-
 
 		std::vector< std::unordered_set<int> > stronglyConnectedComponents;
 		// Now process all vertices in order defined by Stack

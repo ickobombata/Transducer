@@ -237,6 +237,34 @@ void Test_RemoveEpsilonCycles1() {
 	printAutomata(A);
 }
 
+void Test_RemoveEpsilonTransitions() {
+	Transitions t;
+	Transition e(Epsilon, Epsilon);
+	Transition a("a", Epsilon);
+	Transition b(Epsilon, "d");
+	t[0] = Outputs();
+	t[1] = Outputs();
+	t[2] = Outputs();
+	t[3] = Outputs();
+	t[4] = Outputs();
+	t[5] = Outputs();
+	t[0].insert(Output(a, 1));
+	t[1].insert(Output(e, 4));
+	t[1].insert(Output(a, 2));
+	t[1].insert(Output(a, 3));
+	t[2].insert(Output(e, 5));
+	t[3].insert(Output(a, 2));
+	t[4].insert(Output(e, 0));
+	t[4].insert(Output(b, 3));
+	t[5].insert(Output(b, 4));
+	t[5].insert(Output(e, 3));
+
+	Automata* A = new Automata(0, 5, t);
+	printAutomata(A);
+	A = A->removeEpsilonToEpsilonTransitions();
+	printAutomata(A);
+}
+
 struct pair_hash {
 	std::size_t operator()(const std::pair<int, int>& pair) const{
 		std::string s = std::to_string(pair.first);
@@ -254,7 +282,8 @@ int main(int argc, char argv[]) {
 		//Test_StrongComponents();
 		//Test_StrongComponents1();
 		//Test_RemoveEpsilonCycles();
-		Test_RemoveEpsilonCycles1();
+		//Test_RemoveEpsilonCycles1();
+		Test_RemoveEpsilonTransitions();
 	}
 	catch (int i) {
 		std::cout << i << std::endl;
