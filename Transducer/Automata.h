@@ -129,34 +129,38 @@ public:
 	   <-> There Exists ∃ loop with <ε, α> for α ≠ ε.
 	*/
 	bool isInfinitlyAmbiguous() { //безкрайно многозначен
-		Automata* automata = automataWithRemovedEpsilonInputTransitions();
+		removeEpsilonCycles();
+		removeEpsilonToEpsilonTransitions();
+		Automata* automata = automataWithRemovedNonEpsilonInputTransitions();
 		
-		std::stack<int> topologicallySortedStaes = sortStatesTopologically(automata, false);
-		// Mark all the vertices as not visited
-		bool *visited = new bool[automata->trans.size()];
-		for (int i = 0; i < automata->trans.size(); i++)
-			visited[i] = false;
+		return isCyclic(automata);
+		//
+		//std::stack<int> topologicallySortedStaes = sortStatesTopologically(automata, false);
+		//// Mark all the vertices as not visited
+		//bool *visited = new bool[automata->trans.size()];
+		//for (int i = 0; i < automata->trans.size(); i++)
+		//	visited[i] = false;
 
-		bool foundVertexWithNotVisitedOutput = false;
-		
-		// loop through the states and add to visited one by one.
-		// if there is a state with transition to a non visited state then there is a cycle
-		while (!topologicallySortedStaes.empty()) {
-			int v = topologicallySortedStaes.top();
-			topologicallySortedStaes.pop();
+		//bool foundVertexWithNotVisitedOutput = false;
+		//
+		//// loop through the states and add to visited one by one.
+		//// if there is a state with transition to a non visited state then there is a cycle
+		//while (!topologicallySortedStaes.empty()) {
+		//	int v = topologicallySortedStaes.top();
+		//	topologicallySortedStaes.pop();
 
-			for (const Output& output: automata->trans[v]) {
-				if (visited[output.second] == false && output.first.second != Epsilon) { // the check here for the second to be true is trivial and allways true.
-					foundVertexWithNotVisitedOutput = true;
-					break;
-				}
-			}
-			if (foundVertexWithNotVisitedOutput)
-				break;
-			visited[v] = true;
-		}
+		//	for (const Output& output: automata->trans[v]) {
+		//		if (visited[output.second] == false && output.first.second != Epsilon) {
+		//			foundVertexWithNotVisitedOutput = true;
+		//			break;
+		//		}
+		//	}
+		//	if (foundVertexWithNotVisitedOutput)
+		//		break;
+		//	visited[v] = true;
+		//}
 
-		return foundVertexWithNotVisitedOutput;
+		//return foundVertexWithNotVisitedOutput;
 	}
 
 	Automata* removeEpsilonToEpsilonTransitions() {
@@ -314,6 +318,47 @@ public:
 		}
 		return stronglyConnectedStates;
 	}
+public:
+		// This function is a variation of DFSUytil() in https://www.geeksforgeeks.org/archives/18212
+		bool isCyclicUtil(Automata* automata, int v, bool visited[], bool *recStack) {
+			if (visited[v] == false) {
+				// Mark the current node as visited and part of recursion stack
+				visited[v] = true;
+				recStack[v] = true;
+
+				// Recur for all the vertices adjacent to this vertex
+				for (const Output& output : automata->trans[v]) {
+					if (!visited[output.second] && isCyclicUtil(automata, output.second, visited, recStack))
+						return true;
+					else if (recStack[output.second])
+						return true;
+				}
+			}
+			recStack[v] = false;  // remove the vertex from recursion stack
+			return false;
+		}
+
+		// Returns true if the graph contains a cycle, else false
+		bool isCyclic(Automata* automata) {
+			// Mark all the vertices as not visited and not part of recursion
+			// stack
+			bool *visited = new bool[automata->trans.size()];
+			bool *recStack = new bool[automata->trans.size()];
+			for (int i = 0; i < automata->trans.size(); i++)
+			{
+				visited[i] = false;
+				recStack[i] = false;
+			}
+
+			// Call the recursive helper function to detect cycle in different
+			// DFS trees
+			for (int i = 0; i < automata->trans.size(); i++)
+				if (isCyclicUtil(automata, i, visited, recStack))
+					return true;
+
+			return false;
+		}
+
 private:
 	int remap(int state) {
 		return state + trans.size();
@@ -355,7 +400,7 @@ private:
 		return remapedTransitions;
 	}
 
-	Automata* automataWithRemovedEpsilonInputTransitions() {
+	Automata* automataWithRemovedNonEpsilonInputTransitions() {
 		Transitions transitions;
 
 		for (Transitions::iterator it = this->trans.begin(); it != this->trans.end(); ++it) {
