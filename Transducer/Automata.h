@@ -232,7 +232,7 @@ public:
 		std::unordered_map<int, std::unordered_set<int>* > scc;
 		std::unordered_set<int>* aa;
 		std::unordered_map<int, int> metaState;
-		std::vector<int> minimalStates(this->trans.size()); for (int i = 0; i < minimalStates.size(); ++i) minimalStates[i] = -1;
+		std::vector<int> minimalStates(this->trans.size());
 		int minimalStatesCounter = 0;
 		for (const std::unordered_set<int>& component : stronglyConnectedComponents) {
 			if (component.empty()) {
