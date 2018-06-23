@@ -115,10 +115,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AutomataTest.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AutomataFactory.h" />
+    <ClInclude Include="AutomataTest.h" />
+    <ClInclude Include="DummyAutomata.h" />
     <ClInclude Include="Parser.h" />
     <ClInclude Include="Automata.h" />
   </ItemGroup>

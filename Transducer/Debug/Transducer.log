@@ -1,10 +1,14 @@
-﻿  main.cpp
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(137): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(198): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(202): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(210): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(236): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(255): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(402): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(407): warning C4018: '<': signed/unsigned mismatch
+﻿  AutomataTest.cpp
+c:\users\ickobombata\source\repos\transducer\transducer\automata.h(147): warning C4018: '<': signed/unsigned mismatch
+c:\users\ickobombata\source\repos\transducer\transducer\automata.h(155): warning C4018: '<': signed/unsigned mismatch
+c:\users\ickobombata\source\repos\transducer\transducer\automata.h(220): warning C4018: '<': signed/unsigned mismatch
+c:\users\ickobombata\source\repos\transducer\transducer\automata.h(308): warning C4018: '<': signed/unsigned mismatch
+c:\users\ickobombata\source\repos\transducer\transducer\automata.h(316): warning C4018: '<': signed/unsigned mismatch
+c:\users\ickobombata\source\repos\transducer\transducer\automata.h(358): warning C4018: '<': signed/unsigned mismatch
+c:\users\ickobombata\source\repos\transducer\transducer\automata.h(362): warning C4018: '<': signed/unsigned mismatch
+c:\users\ickobombata\source\repos\transducer\transducer\automata.h(370): warning C4018: '<': signed/unsigned mismatch
+c:\users\ickobombata\source\repos\transducer\transducer\automata.h(475): warning C4018: '<': signed/unsigned mismatch
+c:\users\ickobombata\source\repos\transducer\transducer\automata.h(480): warning C4018: '<': signed/unsigned mismatch
+c:\users\ickobombata\source\repos\transducer\transducer\parser.h(96): warning C4018: '>=': signed/unsigned mismatch
+c:\users\ickobombata\source\repos\transducer\transducer\automatatest.cpp(22): warning C4805: '!=': unsafe mix of type 'bool' and type 'int' in operation
   Transducer.vcxproj -> C:\Users\ickobombata\source\repos\Transducer\Debug\Transducer.exe

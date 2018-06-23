@@ -57,6 +57,13 @@ public:
 		this->trans = trans;
 	}
 
+	Automata(Automata* other) {
+		this->name = other->name;
+		this->init = States(other->init);
+		this->fin = States(other->fin);
+		this->trans = Transitions(other->trans);
+	}
+
 	Automata* concatFSA(Automata* other) {
 		States remapedInits = remapStates(other->init);
 		States remapedFins = remapStates(other->fin);
@@ -120,47 +127,39 @@ public:
 		return this;
 	}
 
+	Automata* m_starFSA() {
+
+	}
+
 	Automata* removeState(int state) {
 		this->trans.erase(state);
 		return this;
 	}
 
 	/* Returns true if ∃α ∈ Σ* | {m | <α, m> ∈ L(T) } | = ∞
-	   <-> There Exists ∃ loop with <ε, α> for α ≠ ε.
+	<-> There Exists ∃ loop with <ε, α> for α ≠ ε.
 	*/
 	bool isInfinitlyAmbiguous() { //безкрайно многозначен
-		removeEpsilonCycles();
-		removeEpsilonToEpsilonTransitions();
-		Automata* automata = automataWithRemovedNonEpsilonInputTransitions();
-		
-		return isCyclic(automata);
-		//
-		//std::stack<int> topologicallySortedStaes = sortStatesTopologically(automata, false);
-		//// Mark all the vertices as not visited
-		//bool *visited = new bool[automata->trans.size()];
-		//for (int i = 0; i < automata->trans.size(); i++)
-		//	visited[i] = false;
+								  // Mark all the vertices as not visited and not part of recursion
+								  // stack
+		bool *visited = new bool[this->trans.size()];
+		bool *recStack = new bool[this->trans.size()];
+		for (int i = 0; i < this->trans.size(); i++)
+		{
+			visited[i] = false;
+			recStack[i] = false;
+		}
 
-		//bool foundVertexWithNotVisitedOutput = false;
-		//
-		//// loop through the states and add to visited one by one.
-		//// if there is a state with transition to a non visited state then there is a cycle
-		//while (!topologicallySortedStaes.empty()) {
-		//	int v = topologicallySortedStaes.top();
-		//	topologicallySortedStaes.pop();
+		// Call the recursive helper function to detect cycle in different
+		// DFS trees
+		for (int i = 0; i < this->trans.size(); i++)
+			if (isCyclicOnOutputUtil(i, visited, recStack, ""))
+				return true;
 
-		//	for (const Output& output: automata->trans[v]) {
-		//		if (visited[output.second] == false && output.first.second != Epsilon) {
-		//			foundVertexWithNotVisitedOutput = true;
-		//			break;
-		//		}
-		//	}
-		//	if (foundVertexWithNotVisitedOutput)
-		//		break;
-		//	visited[v] = true;
-		//}
+		return false;
 
-		//return foundVertexWithNotVisitedOutput;
+
+		return true;
 	}
 
 	Automata* removeEpsilonToEpsilonTransitions() {
@@ -191,43 +190,6 @@ public:
 		}
 
 		return this;
-	}
-
-	std::vector< std::unordered_set<int> > findStronglyConnectedComponents(bool epsilonTransitions) {
-		std::stack<int> topoSorted;
-
-		// Mark all the vertices as not visited (For first DFS)
-		bool *visited = new bool[this->trans.size()];
-		for (int i = 0; i < this->trans.size(); i++)
-			visited[i] = false;
-
-		// Fill vertices in stack according to their finishing times
-		for (int i = 0; i < this->trans.size(); i++)
-			if (visited[i] == false)
-				topoSorted = sortStatesTopologically(this, epsilonTransitions);
-
-		// Create a reversed graph
-		Automata* transposed = getTranspose();
-
-		// Mark all the vertices as not visited (For second DFS)
-		for (int i = 0; i < this->trans.size(); i++)
-			visited[i] = false;
-
-		std::vector< std::unordered_set<int> > stronglyConnectedComponents;
-		// Now process all vertices in order defined by Stack
-		while (topoSorted.empty() == false)
-		{
-			// Pop a vertex from stack
-			int v = topoSorted.top();
-			topoSorted.pop();
-
-			// Print Strongly connected component of the popped vertex
-			if (visited[v] == false)
-			{
-				stronglyConnectedComponents.push_back(transposed->DFSUtil(v, visited, epsilonTransitions));
-			}
-		}
-		return stronglyConnectedComponents;
 	}
 
 	Automata* removeEpsilonCycles() {
@@ -319,7 +281,6 @@ public:
 		return stronglyConnectedStates;
 	}
 public:
-		// This function is a variation of DFSUytil() in https://www.geeksforgeeks.org/archives/18212
 		bool isCyclicUtil(Automata* automata, int v, bool visited[], bool *recStack) {
 			if (visited[v] == false) {
 				// Mark the current node as visited and part of recursion stack
@@ -358,6 +319,74 @@ public:
 
 			return false;
 		}
+
+protected:
+	bool isCyclicOnOutputUtil(int v, bool visited[], bool *recStack, bool accOutput) {
+		if (visited[v] == false) {
+			// Mark the current node as visited and part of recursion stack
+			visited[v] = true;
+			recStack[v] = true;
+
+			// Recur for all the vertices adjacent to this vertex
+			for (const Output& output : this->trans[v]) {
+				accOutput |= output.first.second != Epsilon;
+				if (output.first.first != Epsilon)
+					continue;
+				if (!visited[output.second] && isCyclicOnOutputUtil(output.second, visited, recStack, accOutput))
+					return true;
+				else if (recStack[output.second] && accOutput)
+					return true;
+			}
+		}
+		recStack[v] = false;  // remove the vertex from recursion stack
+		return false;
+	}
+
+	bool isInfinitlyAmbiguousRemovedCyclesAndEtoE() { //безкрайно многозначен
+		removeEpsilonCycles();
+		removeEpsilonToEpsilonTransitions();
+		Automata* automata = automataWithRemovedNonEpsilonInputTransitions();
+
+		return isCyclic(automata);
+	}
+
+	std::vector< std::unordered_set<int> > findStronglyConnectedComponents(bool epsilonTransitions) {
+		std::stack<int> topoSorted;
+
+		// Mark all the vertices as not visited (For first DFS)
+		bool *visited = new bool[this->trans.size()];
+		for (int i = 0; i < this->trans.size(); i++)
+			visited[i] = false;
+
+		// Fill vertices in stack according to their finishing times
+		for (int i = 0; i < this->trans.size(); i++)
+			if (visited[i] == false)
+				topoSorted = sortStatesTopologically(this, epsilonTransitions);
+
+		// Create a reversed graph
+		Automata* transposed = getTranspose();
+
+		// Mark all the vertices as not visited (For second DFS)
+		for (int i = 0; i < this->trans.size(); i++)
+			visited[i] = false;
+
+		std::vector< std::unordered_set<int> > stronglyConnectedComponents;
+		// Now process all vertices in order defined by Stack
+		while (topoSorted.empty() == false)
+		{
+			// Pop a vertex from stack
+			int v = topoSorted.top();
+			topoSorted.pop();
+
+			// Print Strongly connected component of the popped vertex
+			if (visited[v] == false)
+			{
+				stronglyConnectedComponents.push_back(transposed->DFSUtil(v, visited, epsilonTransitions));
+			}
+		}
+		return stronglyConnectedComponents;
+	}
+
 
 private:
 	int remap(int state) {
@@ -470,5 +499,22 @@ private:
 		}
 		Automata* automata = new Automata(this->fin, this->init, transposed);
 		return automata;
+	}
+
+public: 
+	void printAutomata() {
+		std::cout << "Name: " << this->name << std::endl;
+		std::cout << "Init: [ ";
+		for (const int& state : this->init) std::cout << state << ", ";
+		std::cout << "]\nFin: [ ";
+		for (const int& state : this->fin) std::cout << state << ", ";
+		std::cout << "]\nTransitions: \n\n";
+		for (Transitions::iterator it = this->trans.begin(); it != this->trans.end(); ++it) {
+			std::cout << it->first << ":\n";
+			for (const Output& prehod : it->second) {
+				std::cout << "(" << it->first << ", <" << prehod.first.first << ", " << prehod.first.second << ">, " << prehod.second << "),\n";
+			}
+		}
+		std::cout << "---------------------------------------------\n";
 	}
 };
