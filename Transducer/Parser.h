@@ -37,22 +37,64 @@ public:
 
 	}
 
-	Automata* parse() {
+	Automata* parseReversePolish() {
+		std::stack<Automata*> constructedAutomata;
+
+		while (hasNext()) {
+			char c;
+			while ((c = getNext()) == ' ') { // include all whitespaces
+				if (DEBUG) std::cout << "Reading space\n";
+			}
+			if (c == STAR) {
+				if (constructedAutomata.size() <= 0)
+					throw 41;
+				constructedAutomata.top()->starFSA();
+			}
+			else if (c == UNION) {
+				if (constructedAutomata.size() <= 1)
+					throw 41;
+				Automata* last = constructedAutomata.top();
+				constructedAutomata.pop();
+				constructedAutomata.top()->unionFSA(last);
+				delete last;
+			}
+			else if (c == CONCATENATION) {
+				if (constructedAutomata.size() <= 1)
+					throw 41;
+				Automata* last = constructedAutomata.top();
+				constructedAutomata.pop();
+				constructedAutomata.top()->concatFSA(last);
+				delete last;
+			}
+			else if (c != '<') {
+				throw 42;
+			}
+			else {
+				Transition transition = readTransition();
+				constructedAutomata.push(AutomataFactory::createAutomata(transition));
+			}
+		}
+		if (constructedAutomata.size() > 1 || constructedAutomata.size() <= 0)
+			throw 41;
+		return constructedAutomata.top();
+	}
+
+	Automata* parsePolish() {
 		char c;
 		while ((c = getNext()) == ' ') { // include all whitespaces
-			if (DEBUG) std::cout << c;
+			if (DEBUG) std::cout << "Reading space\n";
 		}
 
 		Automata* automata;
 		if (c == STAR) {
-			automata = parse();
+			automata = parsePolish();
 			automata->starFSA();
 		} else if (c == UNION) {
-			automata = parse();
-			automata->unionFSA(parse());
+			automata = parsePolish();
+			automata->unionFSA(parsePolish());
 		} else if (c == CONCATENATION) {
-			automata = parse();
-			automata->concatFSA(parse());
+			automata = parsePolish();
+			automata->concatFSA(parsePolish());
 		} else if (c != '<') {
 			throw 42;
 		} else {
@@ -86,16 +128,21 @@ private:
 		return Transition(input, output);
 	}
 
-	char getNext() {
+	bool hasNext() {
 		if (this->isFile) {
-			if (!this->inFile.good()) {
-				throw 41;
-			}
+			return !this->inFile.eof();
+		} else {
+			return sequenceIndex < sequence.size();
+		}
+	}
+
+	char getNext() {
+		if (!hasNext()) {
+			throw 41;
+		}
+		if (this->isFile) {
 			return this->inFile.get();
 		} else {
-			if (this->sequenceIndex >= this->sequence.size()) {
-				throw 42;
-			}
 			return this->sequence[sequenceIndex++];
 		}
 	}

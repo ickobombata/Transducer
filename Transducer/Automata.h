@@ -11,7 +11,18 @@
 #define N 10000
 #define Epsilon ""
 
+struct stateStateOutput_hash {
+	std::size_t operator()(std::pair<int, std::pair<int, std::string>> p) const {
+		std::string s = std::to_string(p.first);
+		s.append(std::to_string(p.second.first));
+		s.append(p.second.second);
+		return std::hash<std::string>()(s);
+	}
+};
 
+typedef std::pair<int, std::string> StateOutput;
+typedef std::pair<int, StateOutput> StateStateOutput;
+typedef std::unordered_set<StateStateOutput, stateStateOutput_hash> StateStateOutputs;
 
 typedef std::pair<std::string, std::string> Transition;
 typedef std::unordered_set<int> States;
@@ -153,13 +164,22 @@ public:
 		// Call the recursive helper function to detect cycle in different
 		// DFS trees
 		for (int i = 0; i < this->trans.size(); i++)
-			if (isCyclicOnOutputUtil(i, visited, recStack, ""))
+			if (isCyclicOnOutputUtil(i, visited, recStack, false))
 				return true;
 
 		return false;
 
 
 		return true;
+	}
+
+	std::pair<Automata*, std::pair<std::vector<std::string>, bool> > makeRealTimeAutomata() {
+		removeEpsilonToEpsilonTransitions();
+		printAutomata();
+		expand();
+		printAutomata();
+		
+		return removeUpperEpsilon();
 	}
 
 	Automata* removeEpsilonToEpsilonTransitions() {
@@ -258,67 +278,145 @@ public:
 		return this;
 	}
 	
-	// A recursive function to print DFS starting from v
-	std::unordered_set<int> DFSUtil(int v, bool visited[], bool epsilonTransition)
-	{
-		std::unordered_set<int> stronglyConnectedStates;
-		visited[v] = true;
-		stronglyConnectedStates.insert(v);
-
-		for (const Output& output : this->trans[v]) {
-			if (!visited[output.second]) {
-				if (epsilonTransition) {
-					if (output.first.first == Epsilon && output.first.second == Epsilon) {
-						std::unordered_set<int> scs = DFSUtil(output.second, visited, epsilonTransition);
-						stronglyConnectedStates.insert(scs.begin(), scs.end());
-					}
-				} else {
-					std::unordered_set<int> scs = DFSUtil(output.second, visited, epsilonTransition);
-					stronglyConnectedStates.insert(scs.begin(), scs.end());
-				}
-			}
-		}
-		return stronglyConnectedStates;
-	}
 public:
-		bool isCyclicUtil(Automata* automata, int v, bool visited[], bool *recStack) {
-			if (visited[v] == false) {
-				// Mark the current node as visited and part of recursion stack
-				visited[v] = true;
-				recStack[v] = true;
+	// Returns true if the graph contains a cycle, else false
+	bool isCyclic(Automata* automata) {
+		// Mark all the vertices as not visited and not part of recursion
+		// stack
+		bool *visited = new bool[automata->trans.size()];
+		bool *recStack = new bool[automata->trans.size()];
+		for (int i = 0; i < automata->trans.size(); i++)
+		{
+			visited[i] = false;
+			recStack[i] = false;
+		}
 
-				// Recur for all the vertices adjacent to this vertex
-				for (const Output& output : automata->trans[v]) {
-					if (!visited[output.second] && isCyclicUtil(automata, output.second, visited, recStack))
-						return true;
-					else if (recStack[output.second])
-						return true;
+		// Call the recursive helper function to detect cycle in different
+		// DFS trees
+		for (int i = 0; i < automata->trans.size(); i++)
+			if (isCyclicUtil(automata, i, visited, recStack))
+				return true;
+
+		return false;
+	}
+		
+	std::pair<Automata*, std::pair<std::vector<std::string>, bool> > removeUpperEpsilon() {
+		std::pair<StateStateOutputs, bool> C = inputEpsilonCloser();
+		std::vector<std::pair<int, std::string>> WF = getPathsAndFinalStates(C.first);
+		std::vector<std::string> W;
+		for (auto& wf : WF) {
+			W.push_back(wf.second);
+			this->fin.insert(wf.first);
+		}
+
+		auto Ce = proj1_23(C.first);
+		auto eC = proj2_13(C.first);
+
+		// optimize split the delta in two the first one with first Epsilon and the others without epsilon.
+		Transitions newTransitions;
+		for (auto& t : this->trans) {
+			for (auto& output : t.second) {
+				if (output.first.first != Epsilon) {
+					for (auto& qu : eC[t.first]) {
+						for (auto& rw : Ce[output.second]) {
+							if (newTransitions.find(qu.first) == newTransitions.end()) {
+								newTransitions[qu.first] = Outputs();
+							}
+							std::string uvw = qu.second; 
+							uvw.append(output.first.second);
+							uvw.append(rw.second);
+							newTransitions[qu.first].insert(Output(Transition(output.first.first, uvw), rw.first));
+						}
+					}
 				}
 			}
-			recStack[v] = false;  // remove the vertex from recursion stack
-			return false;
 		}
+		this->trans = newTransitions;
 
-		// Returns true if the graph contains a cycle, else false
-		bool isCyclic(Automata* automata) {
-			// Mark all the vertices as not visited and not part of recursion
-			// stack
-			bool *visited = new bool[automata->trans.size()];
-			bool *recStack = new bool[automata->trans.size()];
-			for (int i = 0; i < automata->trans.size(); i++)
-			{
-				visited[i] = false;
-				recStack[i] = false;
+		return std::pair<Automata*, std::pair<std::vector<std::string>, bool> >(
+			this, 
+			std::pair < std::vector<std::string>, bool>(W, C.second));
+	}
+
+	std::vector<std::pair<int, std::string>> getPathsAndFinalStates(StateStateOutputs& C) {
+		std::vector<std::pair<int, std::string>> WF;
+		for (auto& t : C) {
+			if (this->init.find(t.first) != this->init.end() && this->fin.find(t.second.first) != this->fin.end()) {
+				WF.push_back(std::pair<int, std::string>(t.first, t.second.second));
 			}
-
-			// Call the recursive helper function to detect cycle in different
-			// DFS trees
-			for (int i = 0; i < automata->trans.size(); i++)
-				if (isCyclicUtil(automata, i, visited, recStack))
-					return true;
-
-			return false;
 		}
+		return WF;
+	}
+
+	std::pair<StateStateOutputs, bool> inputEpsilonCloser() {
+		// Call the recursive helper function to print DFS
+		// traversal starting from all vertices one by one
+		bool** tc; // To store transitive closure
+		std::pair<StateStateOutputs, bool> result;
+		tc = new bool*[this->trans.size()];
+		for (int i = 0; i<this->trans.size(); i++)
+		{
+			tc[i] = new bool[this->trans.size()];
+			memset(tc[i], false, this->trans.size() * sizeof(bool));
+		}
+		for (int i = 0; i < this->trans.size(); i++) {
+			transitiveEpsilonClosureUtil(i, i, tc, result, Epsilon);
+		}
+
+		/*for (int i = 0; i<this->trans.size(); i++)
+		{
+			for (int j = 0; j < this->trans.size(); j++)
+				std::cout << tc[i][j] << " ";
+			std::cout << std::endl;
+		}*/
+		result.second = isInfinitlyAmbiguous();
+		return result;
+	}
+
+	// A recursive DFS traversal function that finds
+	// all reachable vertices for s.
+	void transitiveEpsilonClosureUtil(int s, int v, bool** tc, std::pair<StateStateOutputs, bool>& result, std::string accOutput)
+	{
+		tc[s][v] = true;
+		result.first.insert(StateStateOutput(s, StateOutput(v, accOutput)));
+		for (const Output& output : this->trans[v]) {
+			if (output.first.first == Epsilon) {
+				std::string newAccOut = accOutput;
+				newAccOut.append(output.first.second);
+				if (s == output.second) {
+					result.first.insert(StateStateOutput(s, StateOutput(s, newAccOut)));
+				} else if(tc[s][output.second] == false) {
+					transitiveEpsilonClosureUtil(s, output.second, tc, result, newAccOut);
+				}
+			}
+		}
+	}
+
+	Automata* expand() {
+		Transitions newTransitions;
+		for (auto& t : this->trans) {
+			newTransitions[t.first] = Outputs();
+		}
+		for (auto& t : this->trans) {
+			for (auto& output : t.second) {
+				if (output.first.first.length() > 1) {
+					std::vector<int> newStates = kNewStates(newTransitions, output.first.first.length() - 1);
+					for (int i = 0; i < newStates.size() - 1; ++i) {
+						Output intermediateState(Transition(std::string(1, output.first.first[i + 1]), Epsilon), newStates[i + 1]);
+						newTransitions[newStates[i]].insert(intermediateState);
+					}
+					Output lastState(Transition(std::string(1, output.first.first[output.first.first.length() - 1]), Epsilon), output.second);
+					newTransitions[newStates[newStates.size() - 1]].insert(lastState);
+					Output firstState(Transition(std::string(1, output.first.first[0]), output.first.second), newStates[0]);
+					newTransitions[t.first].insert(firstState);
+				} else {
+					newTransitions[t.first].insert(output);
+				}
+			}
+		}
+		this->trans = newTransitions;
+		return this;
+	}
 
 protected:
 	bool isCyclicOnOutputUtil(int v, bool visited[], bool *recStack, bool accOutput) {
@@ -387,8 +485,40 @@ protected:
 		return stronglyConnectedComponents;
 	}
 
+	// A recursive function to print DFS starting from v
+	std::unordered_set<int> DFSUtil(int v, bool visited[], bool epsilonTransition)
+	{
+		std::unordered_set<int> stronglyConnectedStates;
+		visited[v] = true;
+		stronglyConnectedStates.insert(v);
 
+		for (const Output& output : this->trans[v]) {
+			if (!visited[output.second]) {
+				if (epsilonTransition) {
+					if (output.first.first == Epsilon && output.first.second == Epsilon) {
+						std::unordered_set<int> scs = DFSUtil(output.second, visited, epsilonTransition);
+						stronglyConnectedStates.insert(scs.begin(), scs.end());
+					}
+				}
+				else {
+					std::unordered_set<int> scs = DFSUtil(output.second, visited, epsilonTransition);
+					stronglyConnectedStates.insert(scs.begin(), scs.end());
+				}
+			}
+		}
+		return stronglyConnectedStates;
+	}
 private:
+	std::vector<int> kNewStates(Transitions& t, int k) {
+		std::vector<int> res;
+		int cur = t.size();
+		for (int i = 0; i < k; ++i) {
+			t[cur] = Outputs();
+			res.push_back(cur++);
+		}
+		return res;
+	}
+
 	int remap(int state) {
 		return state + trans.size();
 	}
@@ -442,7 +572,25 @@ private:
 		}
 		return new Automata(this->init, this->fin, transitions);
 	}
-	
+
+	bool isCyclicUtil(Automata* automata, int v, bool visited[], bool *recStack) {
+		if (visited[v] == false) {
+			// Mark the current node as visited and part of recursion stack
+			visited[v] = true;
+			recStack[v] = true;
+
+			// Recur for all the vertices adjacent to this vertex
+			for (const Output& output : automata->trans[v]) {
+				if (!visited[output.second] && isCyclicUtil(automata, output.second, visited, recStack))
+					return true;
+				else if (recStack[output.second])
+					return true;
+			}
+		}
+		recStack[v] = false;  // remove the vertex from recursion stack
+		return false;
+	}
+
 	// A recursive function used by topologicalSort
 	void topologicalSortUtil(Automata* automata, int v, bool visited[],
 		std::stack<int> &Stack, bool epsilonTransitions)
@@ -500,6 +648,29 @@ private:
 		Automata* automata = new Automata(this->fin, this->init, transposed);
 		return automata;
 	}
+
+	std::unordered_map<int, std::vector<std::pair<int, std::string>>> proj1_23(StateStateOutputs& C) {
+		std::unordered_map<int, std::vector<std::pair<int, std::string>>> res;
+		for (auto& s : this->trans) {
+			res[s.first] = std::vector<std::pair<int, std::string>>();
+		}
+		for (auto& t : C) {
+			res[t.first].push_back(t.second);
+		}
+		return res;
+	}
+
+	std::unordered_map<int, std::vector<std::pair<int, std::string>>> proj2_13(StateStateOutputs& C) {
+		std::unordered_map<int, std::vector<std::pair<int, std::string>>> res;
+		for (auto& s : this->trans) {
+			res[s.first] = std::vector<std::pair<int, std::string>>();
+		}
+		for (auto& t : C) {
+			res[t.second.first].push_back(std::pair<int, std::string>(t.first, t.second.second));
+		}
+		return res;
+	}
+
 
 public: 
 	void printAutomata() {

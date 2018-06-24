@@ -6,30 +6,45 @@
 // regex, isInfAmb, isFunc.
 typedef std::unordered_map<std::string, std::vector<int>> TestInfo;
 
-void AutomataTest::executeE2ETests() {
-	TestInfo testInfo;
-	std::string a = "<:>";  testInfo[a] = std::vector<int>(); testInfo[a].push_back(0); testInfo[a].push_back(1);
-	a = "<a:b>";  testInfo[a] = std::vector<int>(); testInfo[a].push_back(0); testInfo[a].push_back(1);
-	a = "^<a:b> *<abbc:zxy>";  testInfo[a] = std::vector<int>(); testInfo[a].push_back(0); testInfo[a].push_back(1);
-	a = "^<a:b> *<:aa>";  testInfo[a] = std::vector<int>(); testInfo[a].push_back(1); testInfo[a].push_back(1);
-
-	std::cout << "Test runs " << testInfo.size() << std::endl;
-	std::vector<std::string> failed;
-	for (TestInfo::iterator it = testInfo.begin(); it != testInfo.end(); ++it) {
-		Parser parser(it->first, false);
-		Automata* A = parser.parse();
-
-		if (A->isInfinitlyAmbiguous() != it->second[0]) {
-			failed.push_back(it->first);
-		}
-	}
-	std::cout << "Passed: " << testInfo.size() - failed.size() << " , Failed: " << failed.size() << " [";
-	for (std::string failure : failed) {
-		std::cout << failure << ", ";
-	}
-	std::cout << "]" << std::endl;
+std::vector<int> c(int infAmb, int func) {
+	std::vector<int> vec;
+	vec.push_back(infAmb);
+	vec.push_back(func);
+	return vec;
 }
 
+void AutomataTest::executeE2ETests() {
+	TestInfo expectTestInfo;
+	expectTestInfo["<:>"] = c(0, 1);
+	expectTestInfo["<a:b>"] = c(0, 1);
+	expectTestInfo["<abbc:zxy>* <a:b>^"] = c(0, 1);
+	expectTestInfo[" <:aa>* <a:b> ^"] = c(1, 1);
+	expectTestInfo[" <:aa> <ba:>| <a:b> ^"] = c(0, 1);
+	expectTestInfo[" <:>* <:>* ^<a:b> ^"] = c(0, 1);
+	expectTestInfo[" <a:b> <b:a> | <:aa>* ^*<a:b> ^"] = c(1, 1);
+	expectTestInfo[" <:a> <b:>*| <c:>^ <:aa>* |*<a:b> ^*"] = c(1, 1);
+	expectTestInfo["<a:b><:a><:a>^|*"] = c(1, 1);
+
+
+	std::cout << "Test runs " << expectTestInfo.size() << std::endl;
+	TestInfo actualTestInfo;
+	for (TestInfo::iterator it = expectTestInfo.begin(); it != expectTestInfo.end(); ++it) {
+		std::cout << "Running tests for : " << it->first << std::endl;
+		actualTestInfo[it->first] = std::vector<int>();
+		Parser parser(it->first, false);
+		Automata* A = parser.parseReversePolish();
+		actualTestInfo[it->first].push_back(A->isInfinitlyAmbiguous());
+	}
+	int failures = 0;
+	for (TestInfo::iterator it = expectTestInfo.begin(); it != expectTestInfo.end(); ++it) {
+		if (it->second[0] != actualTestInfo[it->first][0]) {
+			std::cout << "ERROR: '" << it->first << "' expected infAmb " << it->second[0] << " actual " << actualTestInfo[it->first][0] << "\n";
+			++failures;
+		}
+	}
+	std::cout << "Passed: " << expectTestInfo.size() - failures << " , Failed: " << failures << std::endl;
+}
+#include <set>
 void AutomataTest::executeAllTests() {
 	executeE2ETests();
 	//Test_AutomataOperations();
@@ -44,11 +59,67 @@ void AutomataTest::executeAllTests() {
 	//Test_IsDummyInfinitlyAmbiguous();
 	//Test_TestAmbiguous();
 	//Test_Parser("^*<aa:b>^<ab:ba>^|<aa:b><ab:ba>*<aa:b>", false);
+	Test_RealTimeAutomata();
+	
+
+}
+void AutomataTest::Test_RealTimeAutomata() {
+	Transitions t;
+	Transition e(Epsilon, Epsilon);
+	Transition a("aa", "aaa");
+	Transition ea(Epsilon, "aa");
+	Transition b("bbb", "b");
+	Transition ce("cc", Epsilon);
+	t[0] = Outputs();
+	t[1] = Outputs();
+	t[2] = Outputs();
+	t[3] = Outputs();
+	t[4] = Outputs();
+	t[0].insert(Output(ea, 1));
+	t[1].insert(Output(b, 2));
+	t[1].insert(Output(ea, 4));
+	t[3].insert(Output(e, 1));
+	t[3].insert(Output(ce, 2));
+	t[4].insert(Output(a, 0));
+
+	Automata* A = new Automata(0, 2, t);
+
+	A->printAutomata();
+	std::pair<Automata*, std::pair<std::vector<std::string>, bool> > res = A->makeRealTimeAutomata();
+	Automata* B = res.first;
+	B->printAutomata();
+	std::cout << "W = [";
+	for (auto& s : res.second.first) {
+		std::cout << s << ", ";
+	}
+	std::cout << "]" << std::endl << "inf = " << res.second.second << std::endl;
+}
+void AutomataTest::Test_Epand() {
+	Transitions t;
+	Transition e("bbb", "q");
+	Transition a("aaa", "aa");
+	Transition b(Epsilon, "ccc");
+	t[0] = Outputs();
+	t[1] = Outputs();
+	t[2] = Outputs();
+	t[3] = Outputs();
+	t[0].insert(Output(a, 1));
+	t[1].insert(Output(b, 2));
+	t[1].insert(Output(e, 3));
+
+	Automata* A = new Automata(0, 2, t);
+	A->printAutomata();
+	Automata* B = A->expand();
+	B->printAutomata();
+}
+
+void AutomataTest::Test_RemoveUpperEpsilon() {
+	
 }
 
 void AutomataTest::Test_Parser(const char* filePath, bool isFile) {
 	Parser parser = Parser(filePath, isFile);
-	Automata* A = parser.parse();
+	Automata* A = parser.parsePolish();
 	A->printAutomata();
 }
 

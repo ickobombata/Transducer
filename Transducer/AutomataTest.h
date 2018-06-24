@@ -11,6 +11,9 @@ private:
 	void Test_IsInfinitlyAmbiguous();
 	void Test_IsDummyInfinitlyAmbiguous();
 	void Test_TestAmbiguous();
+	void Test_RemoveUpperEpsilon();
+	void Test_Epand();
+	void Test_RealTimeAutomata();
 public:
 	void executeAllTests();
 	void executeE2ETests();
