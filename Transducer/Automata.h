@@ -278,6 +278,32 @@ public:
 		return this;
 	}
 	
+	Automata* getSquaredAutomata() {
+		//initialize
+		std::vector<std::pair<int, int>> newStates;
+		for (int i = 0; i < this->init.size(); ++i) {
+			for (int j = 0l j < this->init.size(); ++j) {
+				newStates.push_back(std::pair<int, int>(i, j));
+			}
+		}
+
+		int count = 0;
+		while (count < newStates.size()) {
+			
+			// add new states(adjesion to this ones) according to N;
+			Outputs left = this->trans[newStates[count].first];
+			Outputs right = this->trans[newStates[count].second];
+			for (auto& l : left) {
+				for (auto& r : right) {
+					if (l.first == r.first) {
+						newStates.push_back(std::pair<int, int>(l.second, r.second));
+					}
+				}
+			}
+			//add trans here
+		}
+	}
+
 public:
 	// Returns true if the graph contains a cycle, else false
 	bool isCyclic(Automata* automata) {
