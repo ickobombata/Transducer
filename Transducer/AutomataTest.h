@@ -16,6 +16,9 @@ private:
 	void Test_RealTimeAutomata();
 	void Test_SquaredOutputTransducer();
 	void Test_SquaredOutputTransducer1();
+	void Test_SquaredOutputTransducer2();
+	void Test_w();
+	void Test_Functional1();
 public:
 	void executeAllTests();
 	void executeE2ETests();

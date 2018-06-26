@@ -61,8 +61,63 @@ void AutomataTest::executeAllTests() {
 	//Test_Parser("^*<aa:b>^<ab:ba>^|<aa:b><ab:ba>*<aa:b>", false);
 	//Test_RealTimeAutomata();
 	//Test_SquaredOutputTransducer();
-	Test_SquaredOutputTransducer1();
+	//Test_SquaredOutputTransducer1();
+	//Test_SquaredOutputTransducer2();
+	//Test_w();
+	Test_Functional1();
+}
 
+void AutomataTest::Test_Functional1() {
+	Transitions t;
+	Transition e(Epsilon, Epsilon);
+	Transition ab("a", "b");
+	Transition ac("a", "c");
+	Transition ay("a", "y");
+	t[0] = Outputs();
+	t[1] = Outputs();
+	t[0].insert(Output(ac, 0));
+	t[0].insert(Output(ab, 1));
+	//t[1].insert(Output(ay, 1));
+
+	Automata* A = new Automata(0, 1, t);
+	A->printAutomata();
+	bool isF = A->isFunctional();
+	std::cout << ((isF) ? "yes" : "no" )<< std::endl;
+}
+
+void AutomataTest::Test_w() {
+	Transition a = Transition("aaabc", "aa");
+	Transition b = Transition("mm", "abcm");
+
+	Automata* A = nullptr;
+
+	Transition res = A->w(a, b);
+	std::cout << a.first << ", " << a.second << "\n";
+	std::cout << b.first << ", " << b.second << "\n";
+	std::cout << res.first << ", " << res.second << "\n";
+}
+
+void AutomataTest::Test_SquaredOutputTransducer2() {
+	Transitions t;
+	Transition e(Epsilon, Epsilon);
+	Transition ab("a", "b");
+	Transition ac("a", "c");
+	Transition ay("a", "y");
+	Transition ax("a", "x");
+	t[0] = Outputs();
+	t[1] = Outputs();
+	t[2] = Outputs();
+	t[3] = Outputs();
+	t[0].insert(Output(ab, 1));
+	t[0].insert(Output(ax, 2));
+	t[1].insert(Output(ay, 3));
+	t[2].insert(Output(ac, 3));
+	
+		Automata * A = new Automata(0, 3, t);
+	A->printAutomata();
+	Automata * B = A->getSquaredAutomata();
+	B->printAutomata();
+	
 }
 
 void AutomataTest::Test_SquaredOutputTransducer1() {

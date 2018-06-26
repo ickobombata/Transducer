@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <stack>
+#include <queue>
 #include <unordered_set>
 #include <unordered_map>
 #include <algorithm>
@@ -181,10 +182,97 @@ public:
 		return true;
 	}
 
+	bool isFunctional() {
+		Transition emptyTransition = Transition(Epsilon, Epsilon);
+		std::pair<Automata*, std::pair<std::vector<std::string>, bool> > realTimeAutomata = makeRealTimeAutomata();
+		Automata* squaredOutput = getSquaredAutomata()->trim();
+		std::cout << " Squared output autoamta" << std::endl;
+		squaredOutput->printAutomata();
+
+		// initialize
+		std::unordered_map<int, Transition> Adm;
+		bool functional = true;
+		std::queue<int> toBeProcessed;
+		for (auto& i : squaredOutput->init) {
+			Adm[i] = Transition(Epsilon, Epsilon);
+			toBeProcessed.push(i);
+		}
+
+		while (!toBeProcessed.empty() && functional == true) {
+			int q = toBeProcessed.front(); toBeProcessed.pop();
+			Transition h = Adm[q];
+			
+			std::vector<std::pair<int, Transition>> Dq;
+			for (auto& output : squaredOutput->trans[q]) {
+				Dq.push_back(std::pair<int, Transition>(output.second, w(h, output.first)));
+			}
+
+			for (auto& qh : Dq) {
+				functional &= isBalanceable(qh.second);
+				if (squaredOutput->fin.find(qh.first) != squaredOutput->fin.end()) {
+					if (qh.second != emptyTransition) {
+						functional &= false;
+					}
+				}
+
+				if (Adm.find(qh.first) != Adm.end()) {
+					if (qh.second != Adm[qh.first]) {
+						functional &= false;
+					}
+				}
+			}
+			for (auto& qh : Dq) {
+				Adm[qh.first] = qh.second;
+			}
+		}
+		
+		return !realTimeAutomata.second.second && (realTimeAutomata.second.first.size() <= 1) && functional;
+	}
+
+	Transition w(Transition uv, Transition xy) {
+		Transition res = Transition("", "");
+
+		Transition temp = uv;
+		temp.first.append(xy.first);
+		temp.second.append(xy.second);
+
+		int count = 0;
+		while (count < temp.first.size() && count < temp.second.size()
+			&& temp.first[count] == temp.second[count]) {
+			count++;
+		}
+
+		int newCount = count;
+		while (newCount < temp.first.size()) {
+			res.first.append(std::string(1, temp.first[newCount++]));
+		}
+
+		newCount = count;
+		while (newCount < temp.second.size()) {
+			res.second.append(std::string(1, temp.second[newCount++]));
+		}
+
+		return res;
+	}
+
+	bool isBalanceable(Transition uv) {  
+		return uv.first == Epsilon || uv.second == Epsilon;
+	}
+
+	Automata* trim() {
+		return this;
+	}
+
+	/**
+	* Constructs the automata inpalce
+	*/
 	std::pair<Automata*, std::pair<std::vector<std::string>, bool> > makeRealTimeAutomata() {
+		trim();
 		removeEpsilonToEpsilonTransitions();
+		std::cout << " RemovedEpsilonToEpsilon autoamta" << std::endl;
 		printAutomata();
 		expand();
+		std::cout << " Expanded autoamta" << std::endl;
 		printAutomata();
 		
 		return removeUpperEpsilon();
@@ -317,11 +405,10 @@ public:
 				}
 			}
 
-			int innerCount = count + 1;
 			for (auto& ts : tranState) {
 				if (posByState.find(ts.second) == posByState.end() ) {
 					newStates.push_back(ts.second);
-					posByState[ts.second] = innerCount++;
+					posByState[ts.second] = posByState.size();
 				}
 			}
 			//add trans here
@@ -342,7 +429,7 @@ public:
 		States newFin;
 		for (std::unordered_map<std::pair<int, int>, int>::iterator it = posByState.begin(); it != posByState.end(); ++it) {
 			if (this->fin.find(it->first.first) != this->fin.end() && this->fin.find(it->first.second) != this->fin.end()) {
-				newInit.insert(it->second);
+				newFin.insert(it->second);
 			}
 		}
 
