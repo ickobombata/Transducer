@@ -207,7 +207,7 @@ public:
 				Dq.push_back(std::pair<int, Transition>(output.second, w(h, output.first)));
 			}
 
-			for (auto& qh : Dq) {
+ 			for (auto& qh : Dq) {
 				functional &= isBalanceable(qh.second);
 				if (squaredOutput->fin.find(qh.first) != squaredOutput->fin.end()) {
 					if (qh.second != emptyTransition) {
@@ -222,7 +222,10 @@ public:
 				}
 			}
 			for (auto& qh : Dq) {
-				Adm[qh.first] = qh.second;
+				if (Adm.find(qh.first) == Adm.end()) {
+					toBeProcessed.push(qh.first);
+					Adm[qh.first] = qh.second;
+				}
 			}
 		}
 		
@@ -260,6 +263,11 @@ public:
 	}
 
 	Automata* trim() {
+		States reachableStates = getAllReachableStates();
+
+		std::unordered_map<int, int> map;
+
+
 		return this;
 	}
 
@@ -548,6 +556,44 @@ public:
 				}
 			}
 		}
+	}
+	
+	// A recursive DFS traversal function that finds
+	// all reachable vertices for s.
+	States getAllReachableStates()
+	{
+		bool *visited = new bool[this->trans.size()];
+		for (int i = 0; i < this->trans.size(); i++)
+		{
+			visited[i] = false;
+		}
+
+		// Call the recursive helper function to detect cycle in different
+		// DFS trees
+		States reachable;
+		for (auto& i : this->init) {
+			getAllReachableStatesFromStateUtil(i, visited, reachable);
+		}
+
+		return reachable;
+	}
+
+	bool getAllReachableStatesFromStateUtil(int v, bool* visited, States& reachable) {
+		bool hasReachableFinState = this->fin.find(v) != this->fin.end() || reachable.find(v) != reachable.end();
+		if (visited[v] == false) {
+			visited[v] = true;
+
+			for (const Output& output : this->trans[v]) {
+				if (getAllReachableStatesFromStateUtil(output.second, visited, reachable)) {
+					hasReachableFinState = true;
+				}
+			}
+
+			if (hasReachableFinState) {
+				reachable.insert(v);
+			}
+		} 
+		return hasReachableFinState;
 	}
 
 	Automata* expand() {

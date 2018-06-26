@@ -18,6 +18,7 @@ private:
 	void Test_SquaredOutputTransducer1();
 	void Test_SquaredOutputTransducer2();
 	void Test_w();
+	void Test_ReachableStates();
 	void Test_Functional1();
 public:
 	void executeAllTests();

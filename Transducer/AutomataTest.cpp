@@ -64,7 +64,40 @@ void AutomataTest::executeAllTests() {
 	//Test_SquaredOutputTransducer1();
 	//Test_SquaredOutputTransducer2();
 	//Test_w();
-	Test_Functional1();
+	Test_ReachableStates();
+	//Test_Functional1();
+}
+
+void AutomataTest::Test_ReachableStates() {
+	Transitions t;
+	Transition e("a", "a");
+	t[0] = Outputs();
+	t[1] = Outputs();
+	t[2] = Outputs();
+	t[3] = Outputs();
+	t[4] = Outputs();
+	t[5] = Outputs();
+	t[6] = Outputs();
+	t[7] = Outputs();
+	t[8] = Outputs();
+	t[0].insert(Output(e, 3));
+	t[0].insert(Output(e, 2));
+	t[1].insert(Output(e, 2));
+	t[2].insert(Output(e, 6));
+	t[3].insert(Output(e, 5));
+	t[3].insert(Output(e, 7));
+	t[4].insert(Output(e, 3));
+	t[6].insert(Output(e, 7));
+	t[7].insert(Output(e, 8));
+
+	States init; init.insert(0); init.insert(1); init.insert(2);
+	States fin; fin.insert(8); fin.insert(7);
+	Automata* A = new Automata(init, fin, t);
+	A->printAutomata();
+	States reachable = A->getAllReachableStates();
+	for (auto& r : reachable) {
+		std::cout << r << std::endl;
+	}
 }
 
 void AutomataTest::Test_Functional1() {
