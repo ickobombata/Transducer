@@ -59,10 +59,63 @@ void AutomataTest::executeAllTests() {
 	//Test_IsDummyInfinitlyAmbiguous();
 	//Test_TestAmbiguous();
 	//Test_Parser("^*<aa:b>^<ab:ba>^|<aa:b><ab:ba>*<aa:b>", false);
-	Test_RealTimeAutomata();
-	
+	//Test_RealTimeAutomata();
+	//Test_SquaredOutputTransducer();
+	Test_SquaredOutputTransducer1();
 
 }
+
+void AutomataTest::Test_SquaredOutputTransducer1() {
+	Transitions t;
+	Transition e(Epsilon, Epsilon);
+	Transition ab("a", "b");
+	Transition ac("a", "c");
+	Transition ay("a", "y");
+	t[0] = Outputs();
+	t[1] = Outputs();
+	t[0].insert(Output(ac, 0));
+	t[0].insert(Output(ab, 1));
+	t[1].insert(Output(ay, 1));
+
+	Automata* A = new Automata(0, 1, t);
+	A->printAutomata();
+	Automata* B = A->getSquaredAutomata();
+	B->printAutomata();
+}
+
+void AutomataTest::Test_SquaredOutputTransducer() {
+	Transitions t;
+	Transition e(Epsilon, Epsilon);
+	Transition ab("a", "b");
+	Transition ac("a", "c");
+	Transition xy("x", "y");
+	Transition xz("x", "z");
+	Transition pl("p", "l");
+	Transition ae("a", "e");
+	Transition am("a", "m");
+	Transition pq("p", "q");
+	Transition an("a", "n");
+	t[0] = Outputs();
+	t[1] = Outputs();
+	t[2] = Outputs();
+	t[3] = Outputs();
+	t[4] = Outputs();
+	t[0].insert(Output(xz, 0));
+	t[0].insert(Output(ab, 1));
+	t[0].insert(Output(xy, 3));
+	t[0].insert(Output(ac, 2));
+	t[1].insert(Output(pl, 1));
+	t[1].insert(Output(ae, 3));
+	t[2].insert(Output(pq, 4));
+	t[3].insert(Output(am, 4));
+	t[4].insert(Output(an, 4));
+
+	Automata* A = new Automata(0, 4, t);
+	A->printAutomata();
+	Automata* B = A->getSquaredAutomata();
+	B->printAutomata();
+}
+
 void AutomataTest::Test_RealTimeAutomata() {
 	Transitions t;
 	Transition e(Epsilon, Epsilon);

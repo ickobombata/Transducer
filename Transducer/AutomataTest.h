@@ -14,6 +14,8 @@ private:
 	void Test_RemoveUpperEpsilon();
 	void Test_Epand();
 	void Test_RealTimeAutomata();
+	void Test_SquaredOutputTransducer();
+	void Test_SquaredOutputTransducer1();
 public:
 	void executeAllTests();
 	void executeE2ETests();

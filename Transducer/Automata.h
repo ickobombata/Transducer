@@ -20,6 +20,14 @@ struct stateStateOutput_hash {
 	}
 };
 
+struct positionByState_hash {
+	std::size_t operator()(std::pair<int, int> p) const {
+		std::string s = std::to_string(p.first);
+		s.append(std::to_string(p.second));
+		return std::hash<std::string>()(s);
+	}
+};
+
 typedef std::pair<int, std::string> StateOutput;
 typedef std::pair<int, StateOutput> StateStateOutput;
 typedef std::unordered_set<StateStateOutput, stateStateOutput_hash> StateStateOutputs;
@@ -280,28 +288,65 @@ public:
 	
 	Automata* getSquaredAutomata() {
 		//initialize
-		std::vector<std::pair<int, int>> newStates;
+		std::vector<std::pair<int, int>> newStates; //P
 		for (int i = 0; i < this->init.size(); ++i) {
-			for (int j = 0l j < this->init.size(); ++j) {
+			for (int j = 0; j < this->init.size(); ++j) {
 				newStates.push_back(std::pair<int, int>(i, j));
 			}
 		}
 
 		int count = 0;
+		std::unordered_map<std::pair<int, int>, int, positionByState_hash> posByState;
+		Transitions newTransitions;
 		while (count < newStates.size()) {
-			
+			posByState[newStates[count]] = count;
 			// add new states(adjesion to this ones) according to N;
 			Outputs left = this->trans[newStates[count].first];
 			Outputs right = this->trans[newStates[count].second];
+
+			std::vector < std::pair< std::pair<std::string, std::string >, std::pair<int, int>>> tranState;
 			for (auto& l : left) {
 				for (auto& r : right) {
-					if (l.first == r.first) {
-						newStates.push_back(std::pair<int, int>(l.second, r.second));
+					if (l.first.first == r.first.first) {
+						tranState.push_back(std::pair< std::pair<std::string, std::string >, std::pair<int, int>>(
+							std::pair<std::string, std::string>(
+								l.first.second, r.first.second), 
+							std::pair<int, int>(
+								l.second, r.second)));
 					}
 				}
 			}
+
+			int innerCount = count + 1;
+			for (auto& ts : tranState) {
+				if (posByState.find(ts.second) == posByState.end() ) {
+					newStates.push_back(ts.second);
+					posByState[ts.second] = innerCount++;
+				}
+			}
 			//add trans here
+			newTransitions[count] = Outputs();
+			for (auto& ts : tranState) {
+				newTransitions[count].insert(Output(ts.first, posByState[ts.second]));
+			}
+			++count;
 		}
+		
+		States newInit;
+		for (std::unordered_map<std::pair<int, int>, int>::iterator it = posByState.begin(); it != posByState.end(); ++it) {
+			if (this->init.find(it->first.first) != this->init.end() && this->init.find(it->first.second) != this->init.end()) {
+				newInit.insert(it->second);
+			}
+		}
+
+		States newFin;
+		for (std::unordered_map<std::pair<int, int>, int>::iterator it = posByState.begin(); it != posByState.end(); ++it) {
+			if (this->fin.find(it->first.first) != this->fin.end() && this->fin.find(it->first.second) != this->fin.end()) {
+				newInit.insert(it->second);
+			}
+		}
+
+		return new Automata(newInit, newFin, newTransitions);
 	}
 
 public:
