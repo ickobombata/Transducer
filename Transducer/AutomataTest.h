@@ -8,7 +8,6 @@ private:
 	void Test_RemoveEpsilonCycles();
 	void Test_RemoveEpsilonCycles1();
 	void Test_RemoveEpsilonTransitions();
-	void Test_IsInfinitlyAmbiguous();
 	void Test_IsDummyInfinitlyAmbiguous();
 	void Test_TestAmbiguous();
 	void Test_RemoveUpperEpsilon();
@@ -20,6 +19,8 @@ private:
 	void Test_w();
 	void Test_ReachableStates();
 	void Test_Functional1();
+	void Test_Traverse();
+	void Test_FilterCoReachableStates();
 public:
 	void executeAllTests();
 	void executeE2ETests();

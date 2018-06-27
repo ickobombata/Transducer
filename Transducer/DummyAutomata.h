@@ -21,10 +21,6 @@ public:
 		return Automata::isCyclicOnOutputUtil(v, visited, recStack, accOutput);
 	}
 
-	bool isInfinitlyAmbiguousRemovedCyclesAndEtoE() {
-		return Automata::isInfinitlyAmbiguousRemovedCyclesAndEtoE();
-	}
-
 	std::vector< std::unordered_set<int> > findStronglyConnectedComponents(bool epsilonTransitions) {
 		return Automata::findStronglyConnectedComponents(epsilonTransitions);
 	}

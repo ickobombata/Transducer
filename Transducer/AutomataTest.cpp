@@ -64,8 +64,90 @@ void AutomataTest::executeAllTests() {
 	//Test_SquaredOutputTransducer1();
 	//Test_SquaredOutputTransducer2();
 	//Test_w();
-	Test_ReachableStates();
+	//Test_ReachableStates();
 	//Test_Functional1();
+	Test_Traverse();
+	Test_FilterCoReachableStates();
+}
+
+void AutomataTest::Test_FilterCoReachableStates() {
+	Transitions t;
+	Transition a("", "b");
+	Transition b("x", "y");
+	t[0] = Outputs();
+	t[1] = Outputs();
+	t[2] = Outputs();
+	t[3] = Outputs();
+	t[4] = Outputs();
+	t[0].insert(Output(a, 0));
+	t[0].insert(Output(a, 2));
+	t[0].insert(Output(b, 7));
+	t[1].insert(Output(a, 3));
+	t[2].insert(Output(a, 6));
+	t[3].insert(Output(a, 5));
+	t[3].insert(Output(b, 4));
+	t[6].insert(Output(a, 5));
+	t[7].insert(Output(b, 6));
+	t[7].insert(Output(b, 8));
+
+	States init;
+	init.insert(0);
+	States fin;
+	fin.insert(5);
+	fin.insert(6);
+	Automata* A = new Automata(init, fin, t);
+	A->printAutomata();
+	std::cout << A->isStateCoReachableByEpsilon(1) << std::endl;
+	
+}
+
+void AutomataTest::Test_Traverse() {
+	Transitions t;
+	Transition e(Epsilon, Epsilon);
+	Transition aa("a", "a");
+	Transition aq("a", "q");
+	Transition bb("b", "b");
+	Transition cc("c", "c");
+	Transition mm("m", "m");
+	t[0] = Outputs();
+	t[1] = Outputs();
+	t[2] = Outputs();
+	t[0].insert(Output(aq, 0));
+	t[0].insert(Output(aa, 1));
+	t[0].insert(Output(e, 1));
+	t[1].insert(Output(bb, 2));
+
+	Automata* A = new Automata(0, 2, t);
+	A->printAutomata();
+	std::vector<std::string> res;
+	bool aha = A->traverse("aab", res);
+
+	if (!aha) {
+		std::cout << "BAD BAD ";
+	} else {
+		for (auto& r : res) {
+			std::cout << r << std::endl;
+		}
+	}
+}
+
+void AutomataTest::Test_Functional1() {
+	Transitions t;
+	Transition e(Epsilon, Epsilon);
+	Transition ab("a", "b");
+	Transition ac("a", "c");
+	Transition ay("a", "y");
+	t[0] = Outputs();
+	t[1] = Outputs();
+	t[0].insert(Output(ac, 0));
+	t[0].insert(Output(ab, 1));
+	t[1].insert(Output(ay, 1));
+	//t[1].insert(Output(ay, 1));
+
+	Automata* A = new Automata(0, 1, t);
+	A->printAutomata();
+	bool isF = A->isFunctional();
+	std::cout << ((isF) ? "yes" : "no") << std::endl;
 }
 
 void AutomataTest::Test_ReachableStates() {
@@ -98,24 +180,9 @@ void AutomataTest::Test_ReachableStates() {
 	for (auto& r : reachable) {
 		std::cout << r << std::endl;
 	}
-}
 
-void AutomataTest::Test_Functional1() {
-	Transitions t;
-	Transition e(Epsilon, Epsilon);
-	Transition ab("a", "b");
-	Transition ac("a", "c");
-	Transition ay("a", "y");
-	t[0] = Outputs();
-	t[1] = Outputs();
-	t[0].insert(Output(ac, 0));
-	t[0].insert(Output(ab, 1));
-	//t[1].insert(Output(ay, 1));
-
-	Automata* A = new Automata(0, 1, t);
+	A->trim();
 	A->printAutomata();
-	bool isF = A->isFunctional();
-	std::cout << ((isF) ? "yes" : "no" )<< std::endl;
 }
 
 void AutomataTest::Test_w() {
@@ -494,33 +561,6 @@ void AutomataTest::Test_RemoveEpsilonTransitions() {
 	A->printAutomata();
 	A = A->removeEpsilonToEpsilonTransitions();
 	A->printAutomata();
-}
-
-void AutomataTest::Test_IsInfinitlyAmbiguous() {
-	Transitions t;
-	Transition e(Epsilon, Epsilon);
-	Transition a("a", Epsilon);
-	Transition b(Epsilon, "d");
-	t[0] = Outputs();
-	t[1] = Outputs();
-	t[2] = Outputs();
-	t[3] = Outputs();
-	t[4] = Outputs();
-	t[5] = Outputs();
-	t[0].insert(Output(a, 1));
-	t[1].insert(Output(e, 4));
-	t[1].insert(Output(a, 2));
-	t[1].insert(Output(a, 3));
-	t[2].insert(Output(e, 5));
-	t[3].insert(Output(a, 2));
-	t[4].insert(Output(e, 0));
-	t[4].insert(Output(b, 3));
-	t[5].insert(Output(b, 4));
-	t[5].insert(Output(e, 3));
-
-	DummyAutomata* A = new DummyAutomata(0, 5, t);
-	A->printAutomata();
-	std::cout << "Is ambiguous " << A->isInfinitlyAmbiguousRemovedCyclesAndEtoE() << std::endl;
 }
 
 void AutomataTest::Test_IsDummyInfinitlyAmbiguous() {

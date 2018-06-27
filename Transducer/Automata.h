@@ -5,6 +5,7 @@
 #include <map>
 #include <stack>
 #include <queue>
+#include <deque>
 #include <unordered_set>
 #include <unordered_map>
 #include <algorithm>
@@ -177,17 +178,13 @@ public:
 				return true;
 
 		return false;
-
-
-		return true;
 	}
 
 	bool isFunctional() {
 		Transition emptyTransition = Transition(Epsilon, Epsilon);
 		std::pair<Automata*, std::pair<std::vector<std::string>, bool> > realTimeAutomata = makeRealTimeAutomata();
-		Automata* squaredOutput = getSquaredAutomata()->trim();
-		std::cout << " Squared output autoamta" << std::endl;
-		squaredOutput->printAutomata();
+		Automata* squaredOutput = getSquaredAutomata();
+		squaredOutput = squaredOutput->trim();
 
 		// initialize
 		std::unordered_map<int, Transition> Adm;
@@ -266,9 +263,42 @@ public:
 		States reachableStates = getAllReachableStates();
 
 		std::unordered_map<int, int> map;
+		int next = 0;
+		int i = 0;
+		while (next < this->trans.size()) {
+			while (reachableStates.find(next) == reachableStates.end()) {
+				++next;
+			}
+			map[next++] = i++;
+		}
 
+		Transitions newTransitions;
+		for (auto& it : this->trans) {
+			if (reachableStates.find(it.first) != reachableStates.end()) {
+				newTransitions[map[it.first]] = Outputs();
+				for (auto& output : it.second) {
+					if (reachableStates.find(output.second) != reachableStates.end()) {
+						newTransitions[map[it.first]].insert(Output(output.first, map[output.second]));
+					}
+				}
+			}
+		}
 
-		return this;
+		States newInit;
+		for (auto& i : this->init) {
+			newInit.insert(map[i]);
+		}
+		this->init = newInit;
+
+		States newFin;
+		for (auto& i : this->fin) {
+			newFin.insert(map[i]);
+		}
+		this->fin = newFin;
+
+		this->trans = newTransitions;
+
+		return this;;
 	}
 
 	/**
@@ -277,11 +307,7 @@ public:
 	std::pair<Automata*, std::pair<std::vector<std::string>, bool> > makeRealTimeAutomata() {
 		trim();
 		removeEpsilonToEpsilonTransitions();
-		std::cout << " RemovedEpsilonToEpsilon autoamta" << std::endl;
-		printAutomata();
 		expand();
-		std::cout << " Expanded autoamta" << std::endl;
-		printAutomata();
 		
 		return removeUpperEpsilon();
 	}
@@ -443,6 +469,97 @@ public:
 
 		return new Automata(newInit, newFin, newTransitions);
 	}
+	
+
+	struct Info {
+		int state;
+		std::string output;
+
+		Info(int state, std::string output) : state(state), output(output) {}
+		
+		bool operator==(const Info& rhs)
+		{
+			return (this->state == rhs.state) && (this->output == rhs.output);
+		}
+
+		bool operator!=(const Info& rhs)
+		{
+			return !(*this == rhs);
+		}
+	};
+
+	bool traverse(std::string src, std::vector<std::string>& result) {
+		this->expand();
+		Info NONE(-1, Epsilon);
+		std::deque<Info> qu;
+		for (auto& i : this->init) {
+			qu.push_back(Info(i, Epsilon));
+		}
+
+		for (auto& x : src) {
+			qu.push_back(NONE);
+			std::unordered_map<int, std::unordered_set<std::string> >visitedOnLevel;
+			while (!qu.empty() && qu.front() != NONE) {
+				Info cur = qu.front();
+				qu.pop_front();
+				visitedOnLevel[cur.state].insert(cur.output);
+				for (auto& output : this->trans[cur.state]) {
+					Info toAdd(output.second, cur.output + output.first.second);
+
+					if (output.first.first == Epsilon) {
+						if (visitedOnLevel.find(output.second) != visitedOnLevel.end()) {
+							if (visitedOnLevel[output.second].find(output.first.second) != visitedOnLevel[output.second].end()) {
+								return false;
+							}
+							continue;
+						}
+						qu.push_front(toAdd);
+						visitedOnLevel[toAdd.state].insert(toAdd.output);
+					} else if (x == output.first.first[0]) {
+						qu.push_back(toAdd);
+					}
+				}
+			}
+
+			if (qu.empty()) return false;
+			qu.pop_front();
+		}
+		while (!qu.empty()) {
+			Info cur = qu.front();
+			qu.pop_front();
+			if (isStateCoReachableByEpsilon(cur.state)) {
+				result.push_back(cur.output);
+			}
+		}
+		return true;
+	}
+
+	bool isStateCoReachableByEpsilon(int state) {
+		if (this->fin.find(state) != this->fin.end())
+			return true;
+		bool* visited = new bool[this->trans.size()];
+		for (int i = 0; i < this->trans.size(); ++i) visited[i] = false;
+		std::queue<int> qu;
+		qu.push(state);
+		
+		while (!qu.empty()) {
+			int cur = qu.front();
+			qu.pop();
+			visited[cur] = true;
+
+			for (auto& o : this->trans[cur]) {
+				if (!visited[o.second] && o.first.first == Epsilon) {
+					if (this->fin.find(o.second) != this->fin.end()) {
+						return true;
+					} else {
+						qu.push(o.second);
+					}
+				}
+			}
+		}
+
+		return false;
+	}
 
 public:
 	// Returns true if the graph contains a cycle, else false
@@ -529,18 +646,10 @@ public:
 			transitiveEpsilonClosureUtil(i, i, tc, result, Epsilon);
 		}
 
-		/*for (int i = 0; i<this->trans.size(); i++)
-		{
-			for (int j = 0; j < this->trans.size(); j++)
-				std::cout << tc[i][j] << " ";
-			std::cout << std::endl;
-		}*/
 		result.second = isInfinitlyAmbiguous();
 		return result;
 	}
 
-	// A recursive DFS traversal function that finds
-	// all reachable vertices for s.
 	void transitiveEpsilonClosureUtil(int s, int v, bool** tc, std::pair<StateStateOutputs, bool>& result, std::string accOutput)
 	{
 		tc[s][v] = true;
@@ -558,18 +667,13 @@ public:
 		}
 	}
 	
-	// A recursive DFS traversal function that finds
-	// all reachable vertices for s.
-	States getAllReachableStates()
-	{
+	States getAllReachableStates() {
 		bool *visited = new bool[this->trans.size()];
 		for (int i = 0; i < this->trans.size(); i++)
 		{
 			visited[i] = false;
 		}
 
-		// Call the recursive helper function to detect cycle in different
-		// DFS trees
 		States reachable;
 		for (auto& i : this->init) {
 			getAllReachableStatesFromStateUtil(i, visited, reachable);
@@ -642,14 +746,6 @@ protected:
 		}
 		recStack[v] = false;  // remove the vertex from recursion stack
 		return false;
-	}
-
-	bool isInfinitlyAmbiguousRemovedCyclesAndEtoE() { //безкрайно многозначен
-		removeEpsilonCycles();
-		removeEpsilonToEpsilonTransitions();
-		Automata* automata = automataWithRemovedNonEpsilonInputTransitions();
-
-		return isCyclic(automata);
 	}
 
 	std::vector< std::unordered_set<int> > findStronglyConnectedComponents(bool epsilonTransitions) {
@@ -761,20 +857,6 @@ private:
 			remapedTransitions[remap(it->first)] = neighbours; 
 		}
 		return remapedTransitions;
-	}
-
-	Automata* automataWithRemovedNonEpsilonInputTransitions() {
-		Transitions transitions;
-
-		for (Transitions::iterator it = this->trans.begin(); it != this->trans.end(); ++it) {
-			transitions[it->first] = Outputs();
-			for (const Output& output : it->second) {
-				if (output.first.first != Epsilon) {
-					transitions[it->first].insert(output);
-				}
-			}
-		}
-		return new Automata(this->init, this->fin, transitions);
 	}
 
 	bool isCyclicUtil(Automata* automata, int v, bool visited[], bool *recStack) {
