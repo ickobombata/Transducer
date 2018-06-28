@@ -25,6 +25,10 @@ public:
 	void executeAllTests();
 	void executeE2ETests();
 
+	void ComplexTest1();
+	void ComplexTest2();
+	void ComplexTest3();
+
 private: // not included in the pipeline testing
 	void Test_AutomataOperations();
 	void Test_Parser(const char* filePath, bool isFile);

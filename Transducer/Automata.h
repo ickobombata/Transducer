@@ -182,15 +182,21 @@ public:
 
 	bool isFunctional() {
 		Transition emptyTransition = Transition(Epsilon, Epsilon);
+		//printAutomata();
 		std::pair<Automata*, std::pair<std::vector<std::string>, bool> > realTimeAutomata = makeRealTimeAutomata();
-		Automata* squaredOutput = getSquaredAutomata();
-		squaredOutput = squaredOutput->trim();
+		//printAutomata();
+		getSquaredAutomata();
+		//printAutomata();
+		this->trim();
+		//printAutomata();
+
+		if (realTimeAutomata.second.second == true) return false;
 
 		// initialize
 		std::unordered_map<int, Transition> Adm;
 		bool functional = true;
 		std::queue<int> toBeProcessed;
-		for (auto& i : squaredOutput->init) {
+		for (auto& i : this->init) {
 			Adm[i] = Transition(Epsilon, Epsilon);
 			toBeProcessed.push(i);
 		}
@@ -200,13 +206,13 @@ public:
 			Transition h = Adm[q];
 			
 			std::vector<std::pair<int, Transition>> Dq;
-			for (auto& output : squaredOutput->trans[q]) {
+			for (auto& output : this->trans[q]) {
 				Dq.push_back(std::pair<int, Transition>(output.second, w(h, output.first)));
 			}
 
  			for (auto& qh : Dq) {
 				functional &= isBalanceable(qh.second);
-				if (squaredOutput->fin.find(qh.first) != squaredOutput->fin.end()) {
+				if (this->fin.find(qh.first) != this->fin.end()) {
 					if (qh.second != emptyTransition) {
 						functional &= false;
 					}
@@ -266,7 +272,7 @@ public:
 		int next = 0;
 		int i = 0;
 		while (next < this->trans.size()) {
-			while (reachableStates.find(next) == reachableStates.end()) {
+			while (reachableStates.find(next) == reachableStates.end() && next < this->trans.size()) {
 				++next;
 			}
 			map[next++] = i++;
@@ -286,25 +292,30 @@ public:
 
 		States newInit;
 		for (auto& i : this->init) {
-			newInit.insert(map[i]);
+			if (reachableStates.find(i) != reachableStates.end()) {
+				newInit.insert(map[i]);
+			}
 		}
 		this->init = newInit;
 
 		States newFin;
 		for (auto& i : this->fin) {
-			newFin.insert(map[i]);
+			if (reachableStates.find(i) != reachableStates.end()) {
+				newFin.insert(map[i]);
+			}
 		}
 		this->fin = newFin;
 
 		this->trans = newTransitions;
 
-		return this;;
+		return this;
 	}
 
 	/**
 	* Constructs the automata inpalce
 	*/
 	std::pair<Automata*, std::pair<std::vector<std::string>, bool> > makeRealTimeAutomata() {
+		removeEpsilonCycles();
 		trim();
 		removeEpsilonToEpsilonTransitions();
 		expand();
@@ -411,8 +422,8 @@ public:
 	Automata* getSquaredAutomata() {
 		//initialize
 		std::vector<std::pair<int, int>> newStates; //P
-		for (int i = 0; i < this->init.size(); ++i) {
-			for (int j = 0; j < this->init.size(); ++j) {
+		for (auto& i : this->init) {
+			for (auto& j: this->init) {
 				newStates.push_back(std::pair<int, int>(i, j));
 			}
 		}
@@ -466,8 +477,10 @@ public:
 				newFin.insert(it->second);
 			}
 		}
-
-		return new Automata(newInit, newFin, newTransitions);
+		this->init = newInit;
+		this->fin = newFin;
+		this->trans = newTransitions;
+		return this;
 	}
 	
 
@@ -489,7 +502,9 @@ public:
 	};
 
 	bool traverse(std::string src, std::vector<std::string>& result) {
+		this->removeEpsilonToEpsilonTransitions();
 		this->expand();
+		this->trim();
 		Info NONE(-1, Epsilon);
 		std::deque<Info> qu;
 		for (auto& i : this->init) {
@@ -509,7 +524,7 @@ public:
 					if (output.first.first == Epsilon) {
 						if (visitedOnLevel.find(output.second) != visitedOnLevel.end()) {
 							if (visitedOnLevel[output.second].find(output.first.second) != visitedOnLevel[output.second].end()) {
-								return false;
+								//return false;
 							}
 							continue;
 						}
@@ -732,7 +747,6 @@ protected:
 			// Mark the current node as visited and part of recursion stack
 			visited[v] = true;
 			recStack[v] = true;
-
 			// Recur for all the vertices adjacent to this vertex
 			for (const Output& output : this->trans[v]) {
 				accOutput |= output.first.second != Epsilon;

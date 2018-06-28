@@ -12,39 +12,20 @@
 
 class Parser
 {
-private:
-	std::ifstream inFile;
-	std::string sequence;
-	int sequenceIndex;
-	bool isFile;
 public:
-
-	Parser(const char* path, bool isFile)
-	{
-		Parser(std::string(path), isFile);
-	}
-
-	Parser(std::string path, bool isFile)
-	{
-		this->isFile = isFile;
-		if (isFile) {
-			inFile.open(path);
-		}
-		else {
-			sequence = std::string(path);
-			sequenceIndex = 0;
-		}
-
-	}
-
-	Automata* parseReversePolish() {
+	Automata* parseReversePolish(const char* path) {
+		std::ifstream inFile;
+		inFile.open(path);
 		std::stack<Automata*> constructedAutomata;
 
-		while (hasNext()) {
+		while (hasNext(inFile)) {
 			char c;
-			while ((c = getNext()) == ' ') { // include all whitespaces
+			while (!inFile.eof() && (c = getNext(inFile)) == ' ') { // include all whitespaces
 				if (DEBUG) std::cout << "Reading space\n";
 			}
+			if (inFile.eof())
+				break;
+			if (DEBUG) std::cout << "curr : " << c << std::endl;
 			if (c == STAR) {
 				if (constructedAutomata.size() <= 0)
 					throw 41;
@@ -70,7 +51,7 @@ public:
 				throw 42;
 			}
 			else {
-				Transition transition = readTransition();
+				Transition transition = readTransition(inFile);
 				constructedAutomata.push(AutomataFactory::createAutomata(transition));
 			}
 		}
@@ -79,46 +60,46 @@ public:
 		return constructedAutomata.top();
 	}
 
-	Automata* parsePolish() {
-		char c;
-		while ((c = getNext()) == ' ') { // include all whitespaces
-			if (DEBUG) std::cout << "Reading space\n";
-		}
+	//Automata* parsePolish() {
+	//	char c;
+	//	while ((c = getNext()) == ' ') { // include all whitespaces
+	//		if (DEBUG) std::cout << "Reading space\n";
+	//	}
 
-		Automata* automata;
-		if (c == STAR) {
-			automata = parsePolish();
-			automata->starFSA();
-		} else if (c == UNION) {
-			automata = parsePolish();
-			automata->unionFSA(parsePolish());
-		} else if (c == CONCATENATION) {
-			automata = parsePolish();
-			automata->concatFSA(parsePolish());
-		} else if (c != '<') {
-			throw 42;
-		} else {
-			Transition transition = readTransition();
-			automata = AutomataFactory::createAutomata(transition);
-		}
+	//	Automata* automata;
+	//	if (c == STAR) {
+	//		automata = parsePolish();
+	//		automata->starFSA();
+	//	} else if (c == UNION) {
+	//		automata = parsePolish();
+	//		automata->unionFSA(parsePolish());
+	//	} else if (c == CONCATENATION) {
+	//		automata = parsePolish();
+	//		automata->concatFSA(parsePolish());
+	//	} else if (c != '<') {
+	//		throw 42;
+	//	} else {
+	//		Transition transition = readTransition();
+	//		automata = AutomataFactory::createAutomata(transition);
+	//	}
 
-		return automata;
-	}
+	//	return automata;
+	//}
 
 private:
-	Transition readTransition() {
+	Transition readTransition(std::ifstream& inFile) {
 		char c;
 		std::string input;
 		std::string output;
 		if (DEBUG) std::cout << "<";
-		while ((c = getNext()) != ':') { // we asume that the file is in the right format
+		while ((c = getNext(inFile)) != ':') { // we asume that the file is in the right format
 			if (c != ' ') {
 				if (DEBUG) std::cout << c;
 				input.push_back(c);
 			}
 		}
 		if (DEBUG) std::cout << ":";
-		while ((c = getNext()) != '>') { // we asume that the file is in the right format
+		while ((c = getNext(inFile)) != '>') { // we asume that the file is in the right format
 			if (c != ' ') {
 				if (DEBUG) std::cout << c;
 				output.push_back(c);
@@ -128,22 +109,14 @@ private:
 		return Transition(input, output);
 	}
 
-	bool hasNext() {
-		if (this->isFile) {
-			return !this->inFile.eof();
-		} else {
-			return sequenceIndex < sequence.size();
-		}
+	bool hasNext(std::ifstream& inFile) {
+		return !inFile.eof();
 	}
 
-	char getNext() {
-		if (!hasNext()) {
+	char getNext(std::ifstream& inFile) {
+		if (!hasNext(inFile)) {
 			throw 41;
 		}
-		if (this->isFile) {
-			return this->inFile.get();
-		} else {
-			return this->sequence[sequenceIndex++];
-		}
+		return inFile.get();
 	}
 };

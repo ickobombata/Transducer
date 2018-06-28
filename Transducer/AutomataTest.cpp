@@ -25,7 +25,7 @@ void AutomataTest::executeE2ETests() {
 	expectTestInfo[" <:a> <b:>*| <c:>^ <:aa>* |*<a:b> ^*"] = c(1, 1);
 	expectTestInfo["<a:b><:a><:a>^|*"] = c(1, 1);
 
-
+/*
 	std::cout << "Test runs " << expectTestInfo.size() << std::endl;
 	TestInfo actualTestInfo;
 	for (TestInfo::iterator it = expectTestInfo.begin(); it != expectTestInfo.end(); ++it) {
@@ -42,11 +42,11 @@ void AutomataTest::executeE2ETests() {
 			++failures;
 		}
 	}
-	std::cout << "Passed: " << expectTestInfo.size() - failures << " , Failed: " << failures << std::endl;
+	std::cout << "Passed: " << expectTestInfo.size() - failures << " , Failed: " << failures << std::endl;*/
 }
 #include <set>
 void AutomataTest::executeAllTests() {
-	executeE2ETests();
+	//executeE2ETests();
 	//Test_AutomataOperations();
 	//Test_AutomataFactory();
 	//Test_Parser("./resources/test1.txt", true);
@@ -66,8 +66,81 @@ void AutomataTest::executeAllTests() {
 	//Test_w();
 	//Test_ReachableStates();
 	//Test_Functional1();
-	Test_Traverse();
-	Test_FilterCoReachableStates();
+	//Test_Traverse();
+	//Test_FilterCoReachableStates();
+	ComplexTest1();
+	ComplexTest2();
+	ComplexTest3();
+}
+
+void AutomataTest::ComplexTest1() {
+	Parser parser = Parser();
+	Automata* A = parser.parseReversePolish("./resources/test1.txt");
+	//A->printAutomata();
+	std::cout << "Test 1" << std::endl;
+	std::cout << "states: " << A->trans.size() << "\n";
+
+	std::cout << "IsAmb: " << A->isInfinitlyAmbiguous() << std::endl;
+	std::cout << "IsFUn: " << A->isFunctional() << std::endl;
+
+	std::cout << "WORDS" << std::endl;
+	Automata* B = parser.parseReversePolish("./resources/test1.txt");
+	std::vector<std::string> res;
+	if (B->traverse("MMXVIII", res)) {
+		for (auto & x : res) {
+			std::cout << x << std::endl;
+		}
+	}
+	else {
+		std::cout << " NO WORDS the set is infinite" << std::endl;
+	}
+}
+
+void AutomataTest::ComplexTest2() {
+	Parser parser = Parser();
+	Automata* A = parser.parseReversePolish("./resources/test2.txt");
+	//A->printAutomata();
+	std::cout << "Test 2" << std::endl;
+	std::cout << "states: " << A->trans.size() << "\n";
+
+	std::cout << "IsAmb: " << A->isInfinitlyAmbiguous() << std::endl;
+	std::cout << "IsFUn: " << A->isFunctional() << std::endl;
+
+	std::cout << "WORDS" << std::endl;
+	Automata* B = parser.parseReversePolish("./resources/test2.txt");
+	std::vector<std::string> res;
+	if (B->traverse("CD", res)) {
+		for (auto & x : res) {
+			std::cout << x << std::endl;
+		}
+	}
+	else {
+		std::cout << " NO WORDS the set is infinite" << std::endl;
+	}
+}
+
+void AutomataTest::ComplexTest3() {
+	Parser parser = Parser();
+	Automata* A = parser.parseReversePolish("./resources/test3.txt");
+	//A->printAutomata();
+	std::cout << "Test 3" << std::endl;
+	std::cout << "states: " << A->trans.size() << "\n";
+
+	std::cout << "IsAmb: " << A->isInfinitlyAmbiguous() << std::endl;
+	std::cout << "IsFUn: " << A->isFunctional() << std::endl;
+
+	std::cout << "WORDS" << std::endl;
+	std::vector<std::string> res;
+	Automata* B = parser.parseReversePolish("./resources/test3.txt");
+	//if (B->traverse("MMCDXVIII", res)) {
+	if (B->traverse("MMCDXVIII", res)) {
+		for (auto & x : res) {
+			std::cout << x << std::endl;
+		}
+	}
+	else {
+		std::cout << " NO WORDS the set is infinite" << std::endl;
+	}
 }
 
 void AutomataTest::Test_FilterCoReachableStates() {
@@ -326,9 +399,9 @@ void AutomataTest::Test_RemoveUpperEpsilon() {
 }
 
 void AutomataTest::Test_Parser(const char* filePath, bool isFile) {
-	Parser parser = Parser(filePath, isFile);
-	Automata* A = parser.parsePolish();
-	A->printAutomata();
+	//Parser parser = Parser(filePath, isFile);
+	//Automata* A = parser.parsePolish();
+	//A->printAutomata();
 }
 
 void AutomataTest::Test_AutomataFactory() {

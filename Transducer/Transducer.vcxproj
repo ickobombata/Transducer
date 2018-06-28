@@ -127,6 +127,8 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="resources\test1.txt" />
+    <Text Include="resources\test2.txt" />
+    <Text Include="resources\test3.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
