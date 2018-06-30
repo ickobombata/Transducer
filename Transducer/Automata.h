@@ -421,15 +421,16 @@ public:
 	
 	Automata* getSquaredAutomata() {
 		//initialize
+		std::unordered_map<std::pair<int, int>, int, positionByState_hash> posByState;
 		std::vector<std::pair<int, int>> newStates; //P
 		for (auto& i : this->init) {
 			for (auto& j: this->init) {
 				newStates.push_back(std::pair<int, int>(i, j));
+				posByState[std::pair<int, int>(i, j)] = newStates.size() - 1;
 			}
 		}
 
 		int count = 0;
-		std::unordered_map<std::pair<int, int>, int, positionByState_hash> posByState;
 		Transitions newTransitions;
 		while (count < newStates.size()) {
 			posByState[newStates[count]] = count;
@@ -500,6 +501,37 @@ public:
 			return !(*this == rhs);
 		}
 	};
+
+	/*
+	* Traverse an Avtomata.
+	*/
+	bool traverse2(std::unordered_set<std::string>& result) {
+		if (isInfinitlyAmbiguous()) {
+			return false;
+		}
+		this->removeEpsilonCycles();
+		this->removeEpsilonToEpsilonTransitions();
+		this->trim();
+		std::queue < std::pair<int, std::string>> qu;
+		for (auto& i : this->init) {
+			qu.push(std::pair<int, std::string>(i, Epsilon));
+		}
+
+		while (!qu.empty()) {
+			std::pair<int, std::string> cur = qu.front();
+			qu.pop();
+
+			if (this->fin.find(cur.first) != this->fin.end()) {
+				result.insert(cur.second);
+			}
+
+			for (auto& output : this->trans[cur.first]) {
+				qu.push(std::pair<int, std::string>(output.second, cur.second + output.first.second));
+			}
+		}
+		
+		return true;
+	}
 
 	bool traverse(std::string src, std::vector<std::string>& result) {
 		this->removeEpsilonToEpsilonTransitions();
@@ -574,6 +606,33 @@ public:
 		}
 
 		return false;
+	}
+
+	Outputs getReachableByEpsilon(int state) {
+		bool* visited = new bool[this->trans.size()];
+		for (int i = 0; i < this->trans.size(); ++i) visited[i] = false;
+		std::queue<std::pair<int, std::string>> qu;
+		qu.push(std::pair<int, std::string>(state, ""));
+
+		Outputs outputs;
+		while (!qu.empty()) {
+			std::pair<int, std::string> cur = qu.front();
+			qu.pop();
+			visited[cur.first] = true;
+
+			for (auto& o : this->trans[cur.first]) {
+				if (o.first.first == Epsilon) {
+					if (visited[o.second]) {
+						outputs.insert(Output(Transition(Epsilon, cur.second + o.first.second), o.second));
+					} else if (!visited[o.second]) {
+						outputs.insert(Output(Transition(Epsilon, cur.second + o.first.second), o.second));
+						qu.push(std::pair<int, std::string>(o.second, cur.second + o.first.second));
+					}
+				}
+			}
+		}
+
+		return outputs;
 	}
 
 public:

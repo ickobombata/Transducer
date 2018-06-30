@@ -21,6 +21,7 @@ private:
 	void Test_Functional1();
 	void Test_Traverse();
 	void Test_FilterCoReachableStates();
+	void Test_EpsilonIntersection();
 public:
 	void executeAllTests();
 	void executeE2ETests();

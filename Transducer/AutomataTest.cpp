@@ -71,6 +71,93 @@ void AutomataTest::executeAllTests() {
 	ComplexTest1();
 	ComplexTest2();
 	ComplexTest3();
+	//Test_EpsilonIntersection();
+}
+
+void AutomataTest::Test_EpsilonIntersection() {
+	Transitions t;
+	t[0] = Outputs();
+	t[1] = Outputs();
+	t[2] = Outputs();
+	t[3] = Outputs();
+	t[4] = Outputs();
+	t[5] = Outputs();
+	t[6] = Outputs();
+	t[7] = Outputs();
+	t[8] = Outputs();
+	t[9] = Outputs();
+	t[10] = Outputs();
+	t[11] = Outputs();
+	t[12] = Outputs();
+	//t[13] = Outputs();
+	Transition e0("", "0");
+	Transition e3("", "3");
+	Transition a1("a", "1");
+	Transition ee("", "");
+	Transition a2("a", "2");
+	Transition b0("b", "0");
+	Transition e4("", "4");
+	Transition a13("a", ".3");
+	Transition a12("a", ".2");
+	Transition b7("b", "7");
+	Transition e5("", "5");
+	Transition a6("a", "6");
+	Transition a9("a", "9");
+	Transition e8("", "8");
+	Transition b1("b", "1");
+	Transition b10("b", ".0");
+	Transition e11("", ".1");
+	t[0].insert(Output(e3, 1));
+	t[0].insert(Output(a2, 0));
+	t[0].insert(Output(a1, 2));
+	t[0].insert(Output(ee, 5));
+	t[0].insert(Output(a2, 3));
+	t[0].insert(Output(b0, 4));
+
+	t[1].insert(Output(e4, 2));
+
+	t[2].insert(Output(b10, 6));
+
+	t[3].insert(Output(b7, 9));
+
+	t[4].insert(Output(e0, 3));
+
+	t[5].insert(Output(e5, 7));
+	t[5].insert(Output(b0, 8));
+
+	t[7].insert(Output(e11, 0));
+	t[7].insert(Output(a9, 6));
+	t[7].insert(Output(a6, 9));
+
+	t[9].insert(Output(b0, 10));
+	t[9].insert(Output(e8, 11));
+	t[9].insert(Output(b1, 12));
+
+	t[13].insert(Output(a13, 1));
+	t[13].insert(Output(a12, 2));
+
+	States init;
+	init.insert(0);
+	init.insert(13);
+	States fin;
+	fin.insert(11);
+	fin.insert(12);
+	fin.insert(6);
+	Automata* A = new Automata(init, fin, t);
+	A->printAutomata();
+	
+	Automata* B = AutomataFactory::epsilonIntersection(A, AutomataFactory::createAutomata("ab"));
+	B->printAutomata();
+	B->trim();
+	B->printAutomata();
+
+	std::unordered_set<std::string> result;
+	B->traverse2(result);
+
+	std::cout << "\n";
+	for (auto& r : result) {
+		std::cout << r << "\n";
+	}
 }
 
 void AutomataTest::ComplexTest1() {
@@ -80,9 +167,25 @@ void AutomataTest::ComplexTest1() {
 	std::cout << "Test 1" << std::endl;
 	std::cout << "states: " << A->trans.size() << "\n";
 
-	std::cout << "IsAmb: " << A->isInfinitlyAmbiguous() << std::endl;
-	std::cout << "IsFUn: " << A->isFunctional() << std::endl;
+	//std::cout << "IsAmb: " << A->isInfinitlyAmbiguous() << std::endl;
+	//std::cout << "IsFUn: " << A->isFunctional() << std::endl;
 
+	std::cout << "WORDS" << std::endl;
+	Automata* C = parser.parseReversePolish("./resources/test1.txt");
+	C->expand();
+	//C->printAutomata();
+	Automata* B = AutomataFactory::epsilonIntersection(C, AutomataFactory::createAutomata("MMXVIII"));
+	std::unordered_set<std::string> res;
+	if (B->traverse2(res)) {
+		for (auto & x : res) {
+			std::cout << x << std::endl;
+		}
+	}
+	else {
+		std::cout << " NO WORDS the set is infinite" << std::endl;
+	}
+
+/*
 	std::cout << "WORDS" << std::endl;
 	Automata* B = parser.parseReversePolish("./resources/test1.txt");
 	std::vector<std::string> res;
@@ -93,7 +196,7 @@ void AutomataTest::ComplexTest1() {
 	}
 	else {
 		std::cout << " NO WORDS the set is infinite" << std::endl;
-	}
+	}*/
 }
 
 void AutomataTest::ComplexTest2() {
@@ -107,9 +210,12 @@ void AutomataTest::ComplexTest2() {
 	std::cout << "IsFUn: " << A->isFunctional() << std::endl;
 
 	std::cout << "WORDS" << std::endl;
-	Automata* B = parser.parseReversePolish("./resources/test2.txt");
-	std::vector<std::string> res;
-	if (B->traverse("CD", res)) {
+	Automata* C = parser.parseReversePolish("./resources/test2.txt");
+	C->expand();
+	//C->printAutomata();
+	Automata* B = AutomataFactory::epsilonIntersection(C, AutomataFactory::createAutomata("CCCC"));
+	std::unordered_set<std::string> res;
+	if (B->traverse2(res)) {
 		for (auto & x : res) {
 			std::cout << x << std::endl;
 		}
@@ -117,6 +223,17 @@ void AutomataTest::ComplexTest2() {
 	else {
 		std::cout << " NO WORDS the set is infinite" << std::endl;
 	}
+
+		/*Automata* B = parser.parseReversePolish("./resources/test2.txt");
+		std::vector<std::string> res;
+		if (B->traverse("CD", res)) {
+			for (auto & x : res) {
+				std::cout << x << std::endl;
+			}
+		}
+		else {
+			std::cout << " NO WORDS the set is infinite" << std::endl;
+		}*/
 }
 
 void AutomataTest::ComplexTest3() {
@@ -130,10 +247,12 @@ void AutomataTest::ComplexTest3() {
 	std::cout << "IsFUn: " << A->isFunctional() << std::endl;
 
 	std::cout << "WORDS" << std::endl;
-	std::vector<std::string> res;
-	Automata* B = parser.parseReversePolish("./resources/test3.txt");
-	//if (B->traverse("MMCDXVIII", res)) {
-	if (B->traverse("MMCDXVIII", res)) {
+	Automata* C = parser.parseReversePolish("./resources/test3.txt");
+	C->expand();
+	//C->printAutomata();
+	Automata* B = AutomataFactory::epsilonIntersection(C, AutomataFactory::createAutomata("MMCDXVIII"));
+	std::unordered_set<std::string> res;
+	if (B->traverse2(res)) {
 		for (auto & x : res) {
 			std::cout << x << std::endl;
 		}
@@ -141,6 +260,19 @@ void AutomataTest::ComplexTest3() {
 	else {
 		std::cout << " NO WORDS the set is infinite" << std::endl;
 	}
+
+
+	//std::vector<std::string> res;
+	//Automata* B = parser.parseReversePolish("./resources/test3.txt");
+	////if (B->traverse("MMCDXVIII", res)) {
+	//if (B->traverse("MMCDXVIII", res)) {
+	//	for (auto & x : res) {
+	//		std::cout << x << std::endl;
+	//	}
+	//}
+	//else {
+	//	std::cout << " NO WORDS the set is infinite" << std::endl;
+	//}
 }
 
 void AutomataTest::Test_FilterCoReachableStates() {
