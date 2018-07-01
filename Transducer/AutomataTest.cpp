@@ -25,24 +25,24 @@ void AutomataTest::executeE2ETests() {
 	expectTestInfo[" <:a> <b:>*| <c:>^ <:aa>* |*<a:b> ^*"] = c(1, 1);
 	expectTestInfo["<a:b><:a><:a>^|*"] = c(1, 1);
 
-/*
-	std::cout << "Test runs " << expectTestInfo.size() << std::endl;
-	TestInfo actualTestInfo;
-	for (TestInfo::iterator it = expectTestInfo.begin(); it != expectTestInfo.end(); ++it) {
-		std::cout << "Running tests for : " << it->first << std::endl;
-		actualTestInfo[it->first] = std::vector<int>();
-		Parser parser(it->first, false);
-		Automata* A = parser.parseReversePolish();
-		actualTestInfo[it->first].push_back(A->isInfinitlyAmbiguous());
-	}
-	int failures = 0;
-	for (TestInfo::iterator it = expectTestInfo.begin(); it != expectTestInfo.end(); ++it) {
-		if (it->second[0] != actualTestInfo[it->first][0]) {
-			std::cout << "ERROR: '" << it->first << "' expected infAmb " << it->second[0] << " actual " << actualTestInfo[it->first][0] << "\n";
-			++failures;
-		}
-	}
-	std::cout << "Passed: " << expectTestInfo.size() - failures << " , Failed: " << failures << std::endl;*/
+
+	//std::cout << "Test runs " << expectTestInfo.size() << std::endl;
+	//TestInfo actualTestInfo;
+	//for (TestInfo::iterator it = expectTestInfo.begin(); it != expectTestInfo.end(); ++it) {
+	//	std::cout << "Running tests for : " << it->first << std::endl;
+	//	actualTestInfo[it->first] = std::vector<int>();
+	//	Parser parser(it->first, false);
+	//	Automata* A = parser.parseReversePolish();
+	//	actualTestInfo[it->first].push_back(A->isInfinitlyAmbiguous());
+	//}
+	//int failures = 0;
+	//for (TestInfo::iterator it = expectTestInfo.begin(); it != expectTestInfo.end(); ++it) {
+	//	if (it->second[0] != actualTestInfo[it->first][0]) {
+	//		std::cout << "ERROR: '" << it->first << "' expected infAmb " << it->second[0] << " actual " << actualTestInfo[it->first][0] << "\n";
+	//		++failures;
+	//	}
+	//}
+	//std::cout << "Passed: " << expectTestInfo.size() - failures << " , Failed: " << failures << std::endl;
 }
 #include <set>
 void AutomataTest::executeAllTests() {
@@ -167,8 +167,8 @@ void AutomataTest::ComplexTest1() {
 	std::cout << "Test 1" << std::endl;
 	std::cout << "states: " << A->trans.size() << "\n";
 
-	//std::cout << "IsAmb: " << A->isInfinitlyAmbiguous() << std::endl;
-	//std::cout << "IsFUn: " << A->isFunctional() << std::endl;
+	std::cout << "IsAmb: " << A->isInfinitlyAmbiguous() << std::endl;
+	std::cout << "IsFUn: " << A->isFunctional() << std::endl;
 
 	std::cout << "WORDS" << std::endl;
 	Automata* C = parser.parseReversePolish("./resources/test1.txt");
@@ -184,19 +184,9 @@ void AutomataTest::ComplexTest1() {
 	else {
 		std::cout << " NO WORDS the set is infinite" << std::endl;
 	}
-
-/*
-	std::cout << "WORDS" << std::endl;
-	Automata* B = parser.parseReversePolish("./resources/test1.txt");
-	std::vector<std::string> res;
-	if (B->traverse("MMXVIII", res)) {
-		for (auto & x : res) {
-			std::cout << x << std::endl;
-		}
-	}
-	else {
-		std::cout << " NO WORDS the set is infinite" << std::endl;
-	}*/
+	delete A;
+	delete C;
+	delete B;
 }
 
 void AutomataTest::ComplexTest2() {
@@ -224,16 +214,9 @@ void AutomataTest::ComplexTest2() {
 		std::cout << " NO WORDS the set is infinite" << std::endl;
 	}
 
-		/*Automata* B = parser.parseReversePolish("./resources/test2.txt");
-		std::vector<std::string> res;
-		if (B->traverse("CD", res)) {
-			for (auto & x : res) {
-				std::cout << x << std::endl;
-			}
-		}
-		else {
-			std::cout << " NO WORDS the set is infinite" << std::endl;
-		}*/
+	delete A;
+	delete C;
+	delete B;
 }
 
 void AutomataTest::ComplexTest3() {
@@ -261,49 +244,9 @@ void AutomataTest::ComplexTest3() {
 		std::cout << " NO WORDS the set is infinite" << std::endl;
 	}
 
-
-	//std::vector<std::string> res;
-	//Automata* B = parser.parseReversePolish("./resources/test3.txt");
-	////if (B->traverse("MMCDXVIII", res)) {
-	//if (B->traverse("MMCDXVIII", res)) {
-	//	for (auto & x : res) {
-	//		std::cout << x << std::endl;
-	//	}
-	//}
-	//else {
-	//	std::cout << " NO WORDS the set is infinite" << std::endl;
-	//}
-}
-
-void AutomataTest::Test_FilterCoReachableStates() {
-	Transitions t;
-	Transition a("", "b");
-	Transition b("x", "y");
-	t[0] = Outputs();
-	t[1] = Outputs();
-	t[2] = Outputs();
-	t[3] = Outputs();
-	t[4] = Outputs();
-	t[0].insert(Output(a, 0));
-	t[0].insert(Output(a, 2));
-	t[0].insert(Output(b, 7));
-	t[1].insert(Output(a, 3));
-	t[2].insert(Output(a, 6));
-	t[3].insert(Output(a, 5));
-	t[3].insert(Output(b, 4));
-	t[6].insert(Output(a, 5));
-	t[7].insert(Output(b, 6));
-	t[7].insert(Output(b, 8));
-
-	States init;
-	init.insert(0);
-	States fin;
-	fin.insert(5);
-	fin.insert(6);
-	Automata* A = new Automata(init, fin, t);
-	A->printAutomata();
-	std::cout << A->isStateCoReachableByEpsilon(1) << std::endl;
-	
+	delete A;
+	delete C;
+	delete B;
 }
 
 void AutomataTest::Test_Traverse() {
@@ -325,15 +268,7 @@ void AutomataTest::Test_Traverse() {
 	Automata* A = new Automata(0, 2, t);
 	A->printAutomata();
 	std::vector<std::string> res;
-	bool aha = A->traverse("aab", res);
 
-	if (!aha) {
-		std::cout << "BAD BAD ";
-	} else {
-		for (auto& r : res) {
-			std::cout << r << std::endl;
-		}
-	}
 }
 
 void AutomataTest::Test_Functional1() {
@@ -388,18 +323,6 @@ void AutomataTest::Test_ReachableStates() {
 
 	A->trim();
 	A->printAutomata();
-}
-
-void AutomataTest::Test_w() {
-	Transition a = Transition("aaabc", "aa");
-	Transition b = Transition("mm", "abcm");
-
-	Automata* A = nullptr;
-
-	Transition res = A->w(a, b);
-	std::cout << a.first << ", " << a.second << "\n";
-	std::cout << b.first << ", " << b.second << "\n";
-	std::cout << res.first << ", " << res.second << "\n";
 }
 
 void AutomataTest::Test_SquaredOutputTransducer2() {

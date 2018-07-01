@@ -1,27 +1,4 @@
 ﻿  AutomataTest.cpp
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(168): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(176): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(246): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(247): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(252): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(257): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(274): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(275): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(381): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(435): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(588): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(613): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(645): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(653): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(714): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(719): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(746): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(786): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(829): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(833): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(841): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(982): warning C4018: '<': signed/unsigned mismatch
-c:\users\ickobombata\source\repos\transducer\transducer\automata.h(987): warning C4018: '<': signed/unsigned mismatch
 c:\users\ickobombata\source\repos\transducer\transducer\automatafactory.h(31): warning C4018: '<': signed/unsigned mismatch
 c:\users\ickobombata\source\repos\transducer\transducer\automatafactory.h(51): warning C4018: '<': signed/unsigned mismatch
   Transducer.vcxproj -> C:\Users\ickobombata\source\repos\Transducer\Debug\Transducer.exe

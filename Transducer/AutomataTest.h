@@ -16,11 +16,9 @@ private:
 	void Test_SquaredOutputTransducer();
 	void Test_SquaredOutputTransducer1();
 	void Test_SquaredOutputTransducer2();
-	void Test_w();
 	void Test_ReachableStates();
 	void Test_Functional1();
 	void Test_Traverse();
-	void Test_FilterCoReachableStates();
 	void Test_EpsilonIntersection();
 public:
 	void executeAllTests();

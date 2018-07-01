@@ -103,4 +103,5 @@ public:
 		B->trim();
 		return B;
 	}
+
 };
