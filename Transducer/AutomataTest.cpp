@@ -68,9 +68,10 @@ void AutomataTest::executeAllTests() {
 	//Test_Functional1();
 	//Test_Traverse();
 	//Test_FilterCoReachableStates();
-	ComplexTest1();
-	ComplexTest2();
-	ComplexTest3();
+	ComplexTest00();
+	//ComplexTest1();
+	//ComplexTest2();
+	//ComplexTest3();
 	//Test_EpsilonIntersection();
 }
 
@@ -158,6 +159,35 @@ void AutomataTest::Test_EpsilonIntersection() {
 	for (auto& r : result) {
 		std::cout << r << "\n";
 	}
+}
+
+void AutomataTest::ComplexTest00() {
+	Parser parser = Parser();
+	Automata* A = parser.parseReversePolish("./resources/test00.txt");
+	//A->printAutomata();
+	std::cout << "Test 00" << std::endl;
+	std::cout << "states: " << A->trans.size() << "\n";
+
+	std::cout << "IsAmb: " << A->isInfinitlyAmbiguous() << std::endl;
+	std::cout << "IsFUn: " << A->isFunctional() << std::endl;
+
+	std::cout << "WORDS" << std::endl;
+	Automata* C = parser.parseReversePolish("./resources/test1.txt");
+	C->expand();
+	//C->printAutomata();
+	Automata* B = AutomataFactory::epsilonIntersection(C, AutomataFactory::createAutomata("MMXVIII"));
+	std::unordered_set<std::string> res;
+	if (B->traverse2(res)) {
+		for (auto & x : res) {
+			std::cout << x << std::endl;
+		}
+	}
+	else {
+		std::cout << " NO WORDS the set is infinite" << std::endl;
+	}
+	delete A;
+	delete C;
+	delete B;
 }
 
 void AutomataTest::ComplexTest1() {
@@ -302,6 +332,8 @@ void AutomataTest::Test_ReachableStates() {
 	t[6] = Outputs();
 	t[7] = Outputs();
 	t[8] = Outputs();
+	t[9] = Outputs();
+	t[9].insert(Output(e, 0));
 	t[0].insert(Output(e, 3));
 	t[0].insert(Output(e, 2));
 	t[1].insert(Output(e, 2));

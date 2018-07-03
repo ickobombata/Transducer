@@ -562,35 +562,69 @@ void Automata::transitiveEpsilonClosureUtil(int s, int v, bool** tc, std::pair<S
 States Automata::getAllReachableStates() {
 	bool *visited = new bool[this->trans.size()];
 	for (int i = 0; i < this->trans.size(); i++)
-	{
 		visited[i] = false;
+
+	std::queue<int> q;
+	States reachableStates;
+	// Add the initial states.
+	for (int i : this->init) {
+		reachableStates.insert(i);
+		q.push(i);
+		visited[i] = true;
 	}
 
-	States reachable;
-	for (auto& i : this->init) {
-		getAllReachableStatesFromStateUtil(i, visited, reachable);
+	while (!q.empty()) {
+		int curr = q.front();
+		q.pop();
+		
+		for (auto& output : this->trans[curr]) {
+			if (!visited[output.second]) {
+				reachableStates.insert(output.second);
+				q.push(output.second);
+				visited[output.second] = true;
+			}
+		}
+		
+	}
+	delete[] visited;
+	visited = new bool[this->trans.size()];
+	for (int i = 0; i < this->trans.size(); i++)
+		visited[i] = false;
+
+	Automata* transposed = this->getTranspose();
+	std::queue<int> qr;
+	States coReachableStates;
+	// Add the initial states.
+	for (int f : this->fin) {
+		coReachableStates.insert(f);
+		qr.push(f);
+		visited[f] = true;
 	}
 
-	return reachable;
-}
+	while (!qr.empty()) {
+		int curr = qr.front();
+		qr.pop();
 
-bool Automata::getAllReachableStatesFromStateUtil(int v, bool* visited, States& reachable) {
-	bool hasReachableFinState = this->fin.find(v) != this->fin.end() || reachable.find(v) != reachable.end();
-	if (visited[v] == false) {
-		visited[v] = true;
-
-		for (const Output& output : this->trans[v]) {
-			if (getAllReachableStatesFromStateUtil(output.second, visited, reachable)) {
-				reachable.insert(v);
-				hasReachableFinState = true;
+		for (auto& output : transposed->trans[curr]) {
+			if (!visited[output.second]) {
+				coReachableStates.insert(output.second);
+				qr.push(output.second);
+				visited[output.second] = true;
 			}
 		}
 
-		if (hasReachableFinState) {
-			reachable.insert(v);
+	}
+
+	delete[] visited;
+
+	States finalReachables;
+	for (auto& el : reachableStates) {
+		if (coReachableStates.find(el) != coReachableStates.end()) {
+			finalReachables.insert(el);
 		}
 	}
-	return hasReachableFinState;
+
+	return finalReachables;
 }
 
 Automata* Automata::expand() {

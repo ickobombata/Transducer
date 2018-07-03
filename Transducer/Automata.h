@@ -124,10 +124,7 @@ private:
 	void transitiveEpsilonClosureUtil(int s, int v, bool** tc, std::pair<StateStateOutputs, bool>& result, std::string accOutput);
 	
 	std::vector<std::pair<int, std::string>> getPathsAndFinalStates(StateStateOutputs& C);
-
-	bool getAllReachableStatesFromStateUtil(int v, bool* visited, States& reachable);
-
-
+	
 private:
 	std::vector<int> kNewStates(Transitions& t, int k);
 

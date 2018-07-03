@@ -1,8 +1,6 @@
 ﻿  AutomataTest.cpp
-c:\users\stoevm\documents\custom\transducer\automata.h(91): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-c:\users\stoevm\documents\custom\transducer\automata.h(112): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-c:\users\stoevm\documents\custom\transducer\automata.h(129): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-c:\users\stoevm\documents\custom\transducer\automata.h(474): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-c:\users\stoevm\documents\custom\transducer\automata.h(585): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-c:\users\stoevm\documents\custom\transducer\automata.h(594): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+c:\users\stoevm\documents\custom\transducer\automatafactory.h(29): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\stoevm\documents\custom\transducer\automatafactory.h(34): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\stoevm\documents\custom\transducer\automatafactory.h(46): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\stoevm\documents\custom\transducer\automatafactory.h(78): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
   Transducer.vcxproj -> C:\Users\stoevm\Documents\custom\x64\Debug\Transducer.exe
