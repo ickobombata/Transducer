@@ -128,6 +128,9 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="resources\test00.txt" />
+    <Text Include="resources\test01.txt" />
+    <Text Include="resources\test02.txt" />
+    <Text Include="resources\test03.txt" />
     <Text Include="resources\test1.txt" />
     <Text Include="resources\test2.txt" />
     <Text Include="resources\test3.txt" />

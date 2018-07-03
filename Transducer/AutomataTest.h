@@ -24,6 +24,9 @@ public:
 	void executeAllTests();
 	void executeE2ETests();
 	void ComplexTest00();
+	void ComplexTest03();
+	void ComplexTest02();
+	void ComplexTest01();
 	void ComplexTest1();
 	void ComplexTest2();
 	void ComplexTest3();

@@ -521,9 +521,7 @@ std::vector<std::pair<int, std::string>> Automata::getPathsAndFinalStates(StateS
 }
 
 std::pair<StateStateOutputs, bool> Automata::inputEpsilonCloser() {
-	// Call the recursive helper function to print DFS
-	// traversal starting from all vertices one by one
-	bool** tc; // To store transitive closure
+	bool** tc;
 	std::pair<StateStateOutputs, bool> result;
 	tc = new bool*[this->trans.size()];
 	for (int i = 0; i<this->trans.size(); i++)
